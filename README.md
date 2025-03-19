@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="man/figures/mpss.png" width="178" height="200">
+  <img src="man/figures/b2spm.png" width="178" height="200">
 </p>
 
 # B2SPM: Bark-Beetle Spatialized Phenological Model
@@ -21,7 +21,7 @@
 
 ## Introduction
 
-The **MPSS** package models the development and spread of the bark beetle in spruce forests of the northern French Alpine arc by integrating topoclimatological data and a spatialized phenological model.
+The **B2SPM** package models the development and spread of the bark beetle in spruce forests of the northern French Alpine arc by integrating topoclimatological data and a spatialized phenological model.
 
 It enables the analysis of bark beetle epidemiology for the current period (current year, for monitoring) or the future (to anticipate attack risks and adapt forest management strategies).
 
@@ -34,19 +34,19 @@ The model is based on a minimum computational and interpretation grid. The compu
 
 ## Installation
 
-MPSS is compatible with Windows, Mac, and Linux.
-You can install MPSS from GitHub using:
+B2SPM is compatible with Windows, Mac, and Linux.
+You can install B2SPM from GitHub using:
 
 ```r
 # install.packages("devtools")
-devtools::install_github("colinfabre/mpss")
+devtools::install_github("colinfabre/b2spm")
 ```
 
 ## Dependencies
 
 ### Internal Functionality
 
-MPSS relies on several other packages to function; make sure to download them beforehand to ensure proper operation:
+B2SPM relies on several other packages to function; make sure to download them beforehand to ensure proper operation:
 
 ```r
 install.packages("utils", "stats", "terra", "sf", "gstat")
@@ -56,7 +56,7 @@ There are no specific package versions required.
 
 ### External Data
 
-MPSS requires a DEM (Digital Elevation Model) covering at least the entire study area where the modeling will be conducted. The resolution of this DEM should not exceed 25m (the final analysis grid is 250m, and a resolution that is too fine (e.g., 5m) significantly increases computation times without improving model accuracy).
+B2SPM requires a DEM (Digital Elevation Model) covering at least the entire study area where the modeling will be conducted. The resolution of this DEM should not exceed 25m (the final analysis grid is 250m, and a resolution that is too fine (e.g., 5m) significantly increases computation times without improving model accuracy).
 
 The phenological model relies on climate data from the [DRIAS portal](https://www.drias-climat.fr), which provides regionalized climate projections for mainland France. The corrected DRIAS-2020 data are available for several different models, but the most accurate for France is MétéoFrance's global ARPEGE-Climat model, forced by the regional climate model (RCM) and used in the ALADIN63 simulation. The preferred scenario is RCP8.5, as it aligns with the current greenhouse gas emission curve.
 
@@ -71,7 +71,7 @@ The user can select the desired study year and extract all DRIAS points containe
   <img src="man/figures/drias_points.png" width="200" height="171">
 </p>
 
-The climate parameters required to run MPSS are:
+The climate parameters required to run B2SPM are:
 
 - Daily minimum temperature (°C)
 - Daily maximum temperature (°C)
@@ -119,7 +119,7 @@ ID001,908000,2129000,02/01/2030,-1.8,6.2,2.1,0.1,0.0024,152.5,225.0,1.8
 
 `rpc(phenological_indicators)`: Calculates the global epidemic risk indicator Rpheno.
 
-**`pipeline(drias_txt_path, dem)`: Runs the complete MPSS pipeline on the study area using the provided DRIAS data.**
+**`pipeline(drias_txt_path, dem)`: Runs the complete B2SPM pipeline on the study area using the provided DRIAS data.**
 
 ### Radiative Model for Sub-Phloem Temperature
 
@@ -133,7 +133,7 @@ The bark beetle hibernates and then digs its egg-laying galleries where larvae m
 
 - Diurnal thermal gradient: the thermal inertia of the phloem reduces daily temperature amplitude, with limited elevation of tmaxphloem and moderate cooling of tminphloem.
 
-A constrained non-linear radiative model accounting for the impact of these environmental variables has been directly integrated into MPSS to model the evolution of sub-phloem temperature, which dictates bark beetle phenology. It is structured as follows:
+A constrained non-linear radiative model accounting for the impact of these environmental variables has been directly integrated into B2SPM to model the evolution of sub-phloem temperature, which dictates bark beetle phenology. It is structured as follows:
 
 #### Heat Conduction Equation for Spruce Bark and Phloem
 
