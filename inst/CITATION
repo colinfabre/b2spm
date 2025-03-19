@@ -1,0 +1,10 @@
+citHeader("Please cite the MPSS package as following:")
+
+citEntry(
+    entry = "Manual",
+    author = c(person("Colin", "FABRE", email = "contact@colinfabre.fr", role = c("aut", "cre"))),
+    title = "MPSS: Modèle Phénologique Spatialisé du Scolyte",
+    year = 2025,
+    url = "https://mpss.colinfabre.fr",
+    note = "Package R"
+)
