@@ -38,7 +38,7 @@ topo_comp <- function(dem) {
 
     bbox <- terra::vect(terra::ext(dem))
 
-    spruce_mask <- terra::rast(system.file("extdata/spruce_mask.tif", package = "mpss"))
+    spruce_mask <- terra::rast(system.file("extdata/spruce_mask.tif", package = "b2spm"))
     terra::crs(spruce_mask) <- "EPSG:2154"
     spruce_mask_bbox <- terra::crop(spruce_mask, bbox)
     spruce_mask_bbox <- terra::resample(spruce_mask_bbox, dem, method = "near", threads = TRUE)
@@ -58,7 +58,7 @@ topo_comp <- function(dem) {
 
 #' drias_reader
 #'
-#' This function reads a text file containing climatic data from DRIAS and formats it into a dataframe compatible with the MPSS pipeline.
+#' This function reads a text file containing climatic data from DRIAS and formats it into a dataframe compatible with the B2SPM pipeline.
 #'
 #' @param drias_txt_path The path to the text file containing DRIAS climatic data. The data should be comma-separated, the date should be in DD/MM/YYYY format, and it should include tmin (°C), tmax (°C), tmean (°C), pr_tot (mm), spec_hum (kg/kg), vis_solrad (W/m2), ir_solrad (W/m2), and wind (m/s).
 #' @param smoothing Should the data be averaged around the central year (must provide an odd number of years). Simulated climate data are usually averaged with a 10-year range on either side of the central year to analyze.
@@ -435,7 +435,7 @@ rpc <- function(pheno_ind) {
 
 #' pipeline
 #'
-#' Runs the entire MPSS pipeline, from reading DRIAS data to spatializing the attack risk and number of attacks per year.
+#' Runs the entire B2SPM pipeline, from reading DRIAS data to spatializing the attack risk and number of attacks per year.
 #'
 #' @param drias_txt_path Path to the DRIAS file containing daily meteorological data.
 #' @param dem A raster (preferably a SpatRaster in EPSG:2154) representing elevation, covering the entire study area plus a 5-pixel buffer.
@@ -449,7 +449,7 @@ rpc <- function(pheno_ind) {
 pipeline <- function(drias_txt_path, dem) {
     print("")
     print("+--------------------------------------------------------------------------------------------------+")
-    print("|------------------------------------- MPSS INITIALISATION... -------------------------------------|")
+    print("|------------------------------------- B2SPM INITIALISATION... -------------------------------------|")
     print("+--------------------------------------------------------------------------------------------------+")
     print("")
 

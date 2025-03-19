@@ -7,19 +7,19 @@
 kpi(awakening_table, swarming_table, maturing_table, topography)
 }
 \arguments{
-\item{awakening_table}{Le data.frame renvoyé par la fonction awakening().}
+\item{awakening_table}{The data.frame returned by the awakening() function.}
 
-\item{swarming_table}{Le data.frame renvoyé par la fonction swarming().}
+\item{swarming_table}{The data.frame returned by the swarming() function.}
 
-\item{maturing_table}{Le data.frame renvoyé par la fonction maturing().}
+\item{maturing_table}{The data.frame returned by the maturing() function.}
 
-\item{topography}{Le stack raster renvoyé par la fonction data_fetcher().}
+\item{topography}{The raster stack returned by the data_fetcher() function.}
 }
 \value{
-Un raster stack contenant les indicateurs phénologiques interpolés (`awakening_doy`, `swarming_doy`, `maturing_doy`), restreints aux pessières pures.
+A raster stack containing the interpolated phenological indicators (`awakening_doy`, `swarming_doy`, `maturing_doy`), restricted to pure spruce forests.
 }
 \description{
-Cette fonction spatialise les indicateurs phénologiques (`awakening_doy`, `swarming_doy`, `maturing_doy`) via une IDW ou krigeage ordinaire à modèle exponentiel, en fonction du nombre de points DRIAS présents dans la zone d'étude.
+This function spatializes phenological indicators (`awakening_doy`, `swarming_doy`, `maturing_doy`) using IDW or ordinary kriging with an exponential model, depending on the number of DRIAS points present in the study area.
 }
 \examples{
 \dontrun{

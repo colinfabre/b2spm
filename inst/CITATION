@@ -1,10 +1,10 @@
-citHeader("Please cite the MPSS package as following:")
+citHeader("Please cite the B2SPM package as following:")
 
 citEntry(
     entry = "Manual",
     author = c(person("Colin", "FABRE", email = "contact@colinfabre.fr", role = c("aut", "cre"))),
-    title = "MPSS: Modèle Phénologique Spatialisé du Scolyte",
+    title = "B2SPM: Bark-Beetle Spatialized Phenological Model",
     year = 2025,
-    url = "https://mpss.colinfabre.fr",
+    url = "https://b2spm.colinfabre.fr",
     note = "Package R"
 )

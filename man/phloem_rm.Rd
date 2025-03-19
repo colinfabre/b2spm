@@ -7,13 +7,13 @@
 phloem_rm(drias_table)
 }
 \arguments{
-\item{drias_table}{La table DRIAS traitée par la fonction drias_reader().}
+\item{drias_table}{The DRIAS table processed by the drias_reader() function.}
 }
 \value{
-La table DRIAS mise à jour avec des colonnes supplémentaires `tmin_phloem`, `tmax_phloem` et `tmean_phloem` contenant les températures sous-phloème.
+The updated DRIAS table with additional columns `tmin_phloem`, `tmax_phloem`, and `tmean_phloem` containing the temperatures beneath the phloem.
 }
 \description{
-Cette fonction utilise un modèle radiatif non-linéaire contraint calibré sur l'épicéa pour calculer les températures sous phloème régissant le développement du scolyte.
+This function uses a constrained non-linear radiative model calibrated for spruce to calculate the temperatures beneath the phloem regulating bark beetle development.
 }
 \examples{
 \dontrun{

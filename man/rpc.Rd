@@ -7,13 +7,13 @@
 rpc(pheno_ind)
 }
 \arguments{
-\item{pheno_ind}{Le stack raster renvoyé par la fonction kpi().}
+\item{pheno_ind}{The raster stack returned by the kpi() function.}
 }
 \value{
-Un raster de probabilité (`Rpheno`), compris entre 0 et 1, indiquant le risque épidémique global de développement d'une génération de scolytes et donc d'une attaque.
+A probability raster (`Rpheno`), ranging from 0 to 1, indicating the global epidemic risk of bark beetle generation development and thus the risk of attack.
 }
 \description{
-Cette fonction calcule l'indicateur global de risque épidémique (`Rpheno`), mesurant la probabilité de succès du développement d'une génération de scolytes en fonction des indicateurs `awakening_doy`, `swarming_doy` et `maturing_doy`, et donc du risque d'attaque.
+This function calculates the global epidemic risk indicator (`Rpheno`), measuring the probability of successful development of a bark beetle generation based on the indicators `awakening_doy`, `swarming_doy`, and `maturing_doy`, and thus the risk of attack.
 }
 \examples{
 \dontrun{

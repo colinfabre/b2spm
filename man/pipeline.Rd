@@ -7,15 +7,15 @@
 pipeline(drias_txt_path, dem)
 }
 \arguments{
-\item{drias_txt_path}{Chemin vers le fichier DRIAS contenant les données météorologiques journalières.}
+\item{drias_txt_path}{Path to the DRIAS file containing daily meteorological data.}
 
-\item{dem}{Un raster (de préférence un SpatRaster en EPSG:2154) d'altitude couvrant l'entièreté de la zone d'étude + un buffer de 5px.}
+\item{dem}{A raster (preferably a SpatRaster in EPSG:2154) representing elevation, covering the entire study area plus a 5-pixel buffer.}
 }
 \value{
-Un stack raster contenant les indicateurs phénologiques spatialisés (`awakening_doy`, `swarming_doy`, `maturing_doy`), le risque d'attaque (`Rpheno`) et le nombre de générations maximum par année (`max_gen`).
+A raster stack containing the spatialized phenological indicators (`awakening_doy`, `swarming_doy`, `maturing_doy`), the attack risk (`Rpheno`), and the maximum number of generations per year (`max_gen`).
 }
 \description{
-Exécute l'ensemble du pipeline MPSS, de la lecture des données DRIAS à la spatialisation du risque d'attaque et du nombre d'attaques par an.
+Runs the entire B2SPM pipeline, from reading DRIAS data to spatializing the attack risk and number of attacks per year.
 }
 \examples{
 \dontrun{

@@ -7,13 +7,13 @@
 topo_comp(dem)
 }
 \arguments{
-\item{dem}{Un raster (de préférence un SpatRaster en EPSG:2154) d'altitude couvrant l'entièreté de la zone d'étude + un buffer de 5px.}
+\item{dem}{A raster (preferably a SpatRaster in EPSG:2154) representing elevation, covering the entire study area plus a 5-pixel buffer, at a 25m-pixel spatial resolution.}
 }
 \value{
-Un stack raster contenant le masque des pessières et chaque raster topographique dans une bande séparée.
+A raster stack containing the spruce forest mask and each topographic raster in a separate band.
 }
 \description{
-Cette fonction charge le masque des pessières et calcule les données topographiques sur la zone d'étude.
+This function loads the spruce forest mask and computes topographic data for the study area using the provided DEM.
 }
 \examples{
 \dontrun{

@@ -7,15 +7,15 @@
 awakening(drias_table, topography)
 }
 \arguments{
-\item{drias_table}{La table DRIAS traitée par la fonction phloem_rm().}
+\item{drias_table}{The DRIAS table processed by the phloem_rm() function.}
 
-\item{topography}{Le stack raster renvoyé par la fonction data_fetcher().}
+\item{topography}{The raster stack returned by the data_fetcher() function.}
 }
 \value{
-Un data.frame avec les colonnes: `id` (identifiant des stations), `X93`, `Y93` (coordonnées), `awakening_doy` (jour de réveil) et `CSI_adj` (indice CSI ajusté).
+A data.frame with the columns: `id`, `X93`, `Y93`, `awakening_doy`, and `CSI_adj` (adjusted CSI index).
 }
 \description{
-Cette fonction calcule le jour de réveil (`awakening`) des scolytes adultes, pondéré par le modulateur topographique CSI_adj.
+This function calculates the awakening day (`awakening`) of adult bark beetles, weighted by the topographic modulator CSI_adj.
 }
 \examples{
 \dontrun{

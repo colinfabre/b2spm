@@ -7,17 +7,17 @@
 swarming(drias_table, awakening_table, topography)
 }
 \arguments{
-\item{drias_table}{La table DRIAS traitée par la fonction phloem_rm().}
+\item{drias_table}{The DRIAS table processed by the phloem_rm() function.}
 
-\item{awakening_table}{Le data.frame renvoyé par la fonction awakening().}
+\item{awakening_table}{The data.frame returned by the awakening() function.}
 
-\item{topography}{Le stack raster renvoyé par la fonction data_fetcher().}
+\item{topography}{The raster stack returned by the data_fetcher() function.}
 }
 \value{
-Un data.frame avec les colonnes: `id` (identifiant des stations), `X93`, `Y93` (coordonnées), `awakening_doy` (jour de réveil) et `swarming_doy` (jour du vol).
+A data.frame with the columns: `id`, `X93`, `Y93`, `awakening_doy`, and `swarming_doy`.
 }
 \description{
-Cette fonction calcule le jour de vol (`swarming`) des scolytes après leur réveil (`awakening`).
+This function calculates the swarming day (`swarming`) of bark beetles after their awakening (`awakening`).
 }
 \examples{
 \dontrun{

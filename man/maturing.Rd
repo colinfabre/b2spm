@@ -7,17 +7,17 @@
 maturing(drias_table, swarming_table, topography)
 }
 \arguments{
-\item{drias_table}{La table DRIAS traitée par la fonction phloem_rm().}
+\item{drias_table}{The DRIAS table processed by the phloem_rm() function.}
 
-\item{swarming_table}{Le data.frame renvoyé par la fonction swarming().}
+\item{swarming_table}{The data.frame returned by the swarming() function.}
 
-\item{topography}{Le stack raster renvoyé par la fonction data_fetcher().}
+\item{topography}{The raster stack returned by the data_fetcher() function.}
 }
 \value{
-Un data.frame avec les colonnes: `id` (identifiant des stations), `X93`, `Y93` (coordonnées), `maturing_doy` (jour de maturation des larves), `CSI_adj` (indice CSI ajusté), et `MDI` (indice de développement microclimatique).
+A data.frame with the columns: `id`, `X93`, `Y93`, `maturing_doy`, `CSI_adj` and `MDI`.
 }
 \description{
-Cette fonction calcule la date de maturation (`maturing`) des larves de scolytes après le vol (`swarming`), pondéré par les modulateurs topographiques CSIadj et MDI.
+This function calculates the maturing date (`maturing`) of bark beetle larvae after swarming (`swarming`), weighted by the topographic modulators CSIadj and MDI.
 }
 \examples{
 \dontrun{
