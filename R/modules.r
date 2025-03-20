@@ -207,6 +207,9 @@ awakening <- function(drias_table, topography) {
         csi_table$csi_adj_log <- log1p(csi_table$csi_adj)
 
         awakening_day <- ceiling(awakening_day * exp(0.2 * csi_table$csi_adj_log))
+        if (awakening_day > 365) {
+            awakening_day <- 0
+        }
 
         coords <- station_data[1, c("X93", "Y93")]
         awakening_table <- data.frame(id = station, X93 = coords$X93, Y93 = coords$Y93, awakening_doy = awakening_day, csi_adj = csi_table$csi_adj)
@@ -244,6 +247,9 @@ swarming <- function(drias_table, awakening_table, topography) {
         awakening_day <- awakening_table$awakening_doy[awakening_table$id == station]
 
         swarming_day <- max(station_data$doy[station_data$doy > awakening_day & station_data$tmean >= 16.11 & station_data$tmax <= 31.29], awakening_day + 1)
+        if (awakening_day == 0 || swarming_day > 365) {
+            swarming_day <- 0
+        }
 
         coords <- station_data[1, c("X93", "Y93")]
         swarming_table <- data.frame(id = station, X93 = coords$X93, Y93 = coords$Y93, swarming_doy = swarming_day)
@@ -308,6 +314,9 @@ maturing <- function(drias_table, swarming_table, topography) {
         mdi_table$mdi_log <- log1p(mdi_table$mdi)
 
         maturing_day <- ceiling(maturing_day * exp(0.005 * csi_table$csi_adj_log * mdi_table$mdi_log))
+        if (swarming_day == 0 || maturing_day > 365) {
+            maturing_day <- 0
+        }
 
         coords <- station_data[1, c("X93", "Y93")]
         maturing_table <- data.frame(id = station, X93 = coords$X93, Y93 = coords$Y93, maturing_doy = maturing_day, csi_adj = csi_table$csi_adj, mdi = mdi_table$mdi)
