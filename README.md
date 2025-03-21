@@ -102,7 +102,7 @@ Data downloaded from DRIAS-2020 must be provided as `.txt` files (native format)
 Example of an expected DRIAS file structure:
 
 ```r
-POSITION,DATE,Temp_min_C,Temp_max_C,Temp_moy_C,Precip_mm,Humid_spec_kgkg,Rayon_vis_Wm2,Rayon_IR_Wm2,Vent_ms
+point_id, lambertx, lamberty,date,tmin,tmax,tmoy,prec,spec_hum,vis_solrad,ir_solrad,wind
 ID001,908000,2129000,01/01/2030,-2.3,5.7,1.5,0.0,0.0025,150.0,220.0,2.1
 ID001,908000,2129000,02/01/2030,-1.8,6.2,2.1,0.1,0.0024,152.5,225.0,1.8
 ```

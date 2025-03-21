@@ -11,6 +11,7 @@
 #' }
 #' @export
 topo_comp <- function(dem) {
+    print("===== TOPOGRAPHY COMPUTER =====")
     if (!inherits(dem, c("SpatRaster", "RasterLayer"))) {
         stop("!! ERROR - The object passed as `dem` must be an elevation raster (a georeferenced matrix of numerical values).")
     }
@@ -40,18 +41,29 @@ topo_comp <- function(dem) {
 
     spruce_mask <- terra::rast(system.file("extdata/spruce_mask.tif", package = "b2spm"))
     terra::crs(spruce_mask) <- "EPSG:2154"
-    spruce_mask_bbox <- terra::crop(spruce_mask, bbox)
-    spruce_mask_bbox <- terra::resample(spruce_mask_bbox, dem, method = "near", threads = TRUE)
+    if (terra::xmin(terra::ext(bbox)) >= terra::xmin(terra::ext(spruce_mask)) &&
+        terra::xmax(terra::ext(bbox)) <= terra::xmax(terra::ext(spruce_mask)) &&
+        terra::ymin(terra::ext(bbox)) >= terra::ymin(terra::ext(spruce_mask)) &&
+        terra::ymax(terra::ext(bbox)) <= terra::ymax(terra::ext(spruce_mask))) {
+            spruce_mask_bbox <- terra::crop(spruce_mask, bbox)
+            spruce_mask_bbox <- terra::resample(spruce_mask_bbox, dem, method = "near", threads = TRUE)
 
-    dem <- terra::clamp(dem, lower = 0, upper = 4810)
-    dem <- round(dem, 0)
+            dem <- terra::clamp(dem, lower = 0, upper = 4810)
+            dem <- round(dem, 0)
 
-    slope <- terra::terrain(dem, v = "slope", unit = "degrees")
-    aspect <- terra::terrain(dem, v = "aspect", unit = "radians")
-    tpi <- terra::terrain(dem, v = "TPI")
-    topography <- c(spruce_mask_bbox, dem, slope, aspect, tpi)
-    names(topography) <- c("spruce_forests", "alt", "slope", "aspect", "tpi")
-    terra::varnames(topography) <- c("spruce_forests", "alt", "slope", "aspect", "tpi")
+            slope <- terra::terrain(dem, v = "slope", unit = "degrees")
+            aspect <- terra::terrain(dem, v = "aspect", unit = "radians")
+            tpi <- terra::terrain(dem, v = "TPI")
+            topography <- c(spruce_mask_bbox, dem, slope, aspect, tpi)
+            names(topography) <- c("spruce_forests", "alt", "slope", "aspect", "tpi")
+            terra::varnames(topography) <- c("spruce_forests", "alt", "slope", "aspect", "tpi")
+        } else {
+            stop("!! ERROR - The input DEM is not within the validity range of the phenological model.")
+        }
+
+    print("== TOPOGRAPHY COMPUTER -- OK ==")
+    print("===============================")
+    gc()
 
     return(topography)
 }
@@ -218,7 +230,7 @@ awakening <- function(drias_table, topography) {
     })
 
     print("== AWAKENING CALCULATION -- OK ==")
-    print("================================")
+    print("=================================")
     gc()
     
     return(do.call(rbind, results))
@@ -290,31 +302,36 @@ maturing <- function(drias_table, swarming_table, topography) {
 
         maturing_day <- ifelse(length(station_data$doy[station_data$dev_cumsum >= 143]) > 0, min(station_data$doy[station_data$dev_cumsum >= 143]), 0)
 
-        window <- swarming_day - 30
-        start_day <- max(1, window)
-        topomod_data <- station_data[station_data$doy >= start_day & station_data$doy <= swarming_day, ]
-        station_point <- terra::vect(topomod_data, geom = c("X93", "Y93"), crs = "EPSG:27572")
-        terra::crs(station_point) <- "EPSG:27572"
-        station_point <- terra::project(station_point, terra::crs(topography))
-        topomod_data$alt <- terra::extract(topography$alt, station_point)[, 2]
-        topomod_data$aspect <- terra::extract(topography$aspect, station_point)[, 2]
+        if (swarming_day != 0) {
+            window <- swarming_day - 30
+            start_day <- max(1, window)
+            topomod_data <- station_data[station_data$doy >= start_day & station_data$doy <= swarming_day, ]
+            station_point <- terra::vect(topomod_data, geom = c("X93", "Y93"), crs = "EPSG:27572")
+            terra::crs(station_point) <- "EPSG:27572"
+            station_point <- terra::project(station_point, terra::crs(topography))
+            topomod_data$alt <- terra::extract(topography$alt, station_point)[, 2]
+            topomod_data$aspect <- terra::extract(topography$aspect, station_point)[, 2]
 
-        csi_table <- stats::aggregate(cbind(vis_solrad, ir_solrad) ~ id, data = topomod_data, sum, na.rm = TRUE)
-        csi_table$csi <- csi_table$vis_solrad + csi_table$ir_solrad
-        topo_table <- stats::aggregate(cbind(alt, aspect) ~ id, data = topomod_data, stats::median, na.rm = TRUE)
-        csi_table <- merge(csi_table, topo_table, by = "id")
-        csi_table$csi_adj <- pmax(round(csi_table$csi * cos(csi_table$aspect * pi / 180) * (1 - (csi_table$alt / 3500)), 2), 0)
-        csi_table$csi_adj_log <- log1p(csi_table$csi_adj)
+            csi_table <- stats::aggregate(cbind(vis_solrad, ir_solrad) ~ id, data = topomod_data, sum, na.rm = TRUE)
+            csi_table$csi <- csi_table$vis_solrad + csi_table$ir_solrad
+            topo_table <- stats::aggregate(cbind(alt, aspect) ~ id, data = topomod_data, stats::median, na.rm = TRUE)
+            csi_table <- merge(csi_table, topo_table, by = "id")
+            csi_table$csi_adj <- pmax(round(csi_table$csi * cos(csi_table$aspect * pi / 180) * (1 - (csi_table$alt / 3500)), 2), 0)
+            csi_table$csi_adj_log <- log1p(csi_table$csi_adj)
 
-        mdi_table <- stats::aggregate(cbind(pr_tot, tmean) ~ id, data = topomod_data, sum, na.rm = TRUE)
-        mdi_table$pr_t <- mdi_table$pr_tot / mdi_table$tmean
-        topo_table <- stats::aggregate(cbind(alt, aspect) ~ id, data = topomod_data, stats::median, na.rm = TRUE)
-        mdi_table <- merge(mdi_table, topo_table, by = "id")
-        mdi_table$mdi <- pmax(round(mdi_table$pr_t * cos(mdi_table$aspect * pi / 180) * (1 - (mdi_table$alt / 3500)), 2), 0)
-        mdi_table$mdi_log <- log1p(mdi_table$mdi)
+            mdi_table <- stats::aggregate(cbind(pr_tot, tmean) ~ id, data = topomod_data, sum, na.rm = TRUE)
+            mdi_table$pr_t <- mdi_table$pr_tot / mdi_table$tmean
+            topo_table <- stats::aggregate(cbind(alt, aspect) ~ id, data = topomod_data, stats::median, na.rm = TRUE)
+            mdi_table <- merge(mdi_table, topo_table, by = "id")
+            mdi_table$mdi <- pmax(round(mdi_table$pr_t * cos(mdi_table$aspect * pi / 180) * (1 - (mdi_table$alt / 3500)), 2), 0)
+            mdi_table$mdi_log <- log1p(mdi_table$mdi)
 
-        maturing_day <- ceiling(maturing_day * exp(0.005 * csi_table$csi_adj_log * mdi_table$mdi_log))
-        if (swarming_day == 0 || maturing_day > 365) {
+            maturing_day <- ceiling(maturing_day * exp(0.005 * csi_table$csi_adj_log * mdi_table$mdi_log))
+        } else {
+            maturing_day <- 0
+        }
+
+        if (maturing_day > 365) {
             maturing_day <- 0
         }
 
@@ -350,6 +367,7 @@ kpi <- function(awakening_table, swarming_table, maturing_table, topography) {
 
     pheno_data <- Reduce(function(x, y) merge(x, y, by = c("id", "X93", "Y93"), all = TRUE), list(awakening_table, swarming_table, maturing_table))
     pheno_data <- pheno_data[, c(1:4, 6:7)]
+    pheno_data <- pheno_data["awakening_doy" != 0, ]
     pheno_sf <- sf::st_as_sf(pheno_data, coords = c("X93", "Y93"), crs = 27572)
     vars <- c("awakening_doy", "swarming_doy", "maturing_doy")
 
