@@ -2,7 +2,7 @@
 #'
 #' This function loads the spruce forest mask and computes topographic data for the study area using the provided DEM.
 #'
-#' @param dem A raster (preferably a SpatRaster in EPSG:2154) representing elevation, covering the entire study area plus a 5-pixel buffer, at a 25m-pixel spatial resolution.
+#' @param dem A raster (preferably a SpatRaster in EPSG:2154) representing elevation, covering the entire study area plus a 5-pixel buffer, at a 25m-pixel spatial resolution. It has to be located within the French alpine arc (see README.md for further information).
 #' @return A raster stack containing the spruce forest mask and each topographic raster in a separate band.
 #' @examples
 #' \dontrun{

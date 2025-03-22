@@ -21,7 +21,7 @@
 
 ## Introduction
 
-The **B2SPM** package models the development and spread of the bark beetle in spruce forests of the northern French Alpine arc by integrating topoclimatological data and a spatialized phenological model.
+The **B2SPM** package models the development and spread of the bark beetle in spruce forests of the French Alpine arc by integrating topoclimatological data and a spatialized phenological model.
 
 It enables the analysis of bark beetle epidemiology for the current period (current year, for monitoring) or the future (to anticipate attack risks and adapt forest management strategies).
 
@@ -29,7 +29,7 @@ The model is based on a minimum computational and interpretation grid. The compu
 
 <p align="center">
   <img src="man/figures/roi.png" width="200" height="116"><br>
-  <em style="font-size: 8pt;">Map of Spruce Forests in the Northern French Alpine Arc. BDFORÊTV2, IGN 2025</em>
+  <em style="font-size: 8pt;">Map of Spruce Forests in the French Alpine Arc. BDFORÊTV2, IGN 2025</em>
 </p>
 
 ## Installation
