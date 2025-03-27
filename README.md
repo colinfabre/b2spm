@@ -29,7 +29,7 @@ The model is based on a minimum computational and interpretation grid. The compu
 
 <p align="center">
   <img src="man/figures/roi.png" width="200" height="116"><br>
-  <em style="font-size: 8pt;">Map of Spruce Forests in the French Alpine Arc. BDFORÊTV2, IGN 2025</em>
+  <em style="font-size: 8pt;">Map of Spruce Forests in the French Alpine Arc. BDFORÊTV2, IGN 2025; OSM 2025</em>
 </p>
 
 ## Installation

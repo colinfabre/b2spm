@@ -11,30 +11,30 @@
 #' }
 #' @export
 topo_comp <- function(dem) {
-    print("===== TOPOGRAPHY COMPUTER =====")
+    cat("===== TOPOGRAPHY COMPUTER =====\n")
     if (!inherits(dem, c("SpatRaster", "RasterLayer"))) {
         stop("!! ERROR - The object passed as `dem` must be an elevation raster (a georeferenced matrix of numerical values).")
     }
     if (class(dem)[1] != "SpatRaster") {
         try(dem <- terra::rast(dem))
-        print("<!> Warning - The input DEM has been converted to a SpatRaster (terra format).")
+        cat("<!> Warning - The input DEM has been converted to a SpatRaster (terra format).\n")
     }
     if (terra::crs(dem) != "EPSG:2154") {
         try(dem <- terra::project(dem, "EPSG:2154"))
-        print("<!> Warning - The input DEM has been reprojected to Lambert 93 (EPSG:2154).")
+        cat("<!> Warning - The input DEM has been reprojected to Lambert 93 (EPSG:2154).\n")
     }
     if (terra::res(dem)[1] != 25) {
         try(grid <- terra::rast(ext = terra::ext(dem), resolution = 25, crs = terra::crs(dem)))
         try(dem <- terra::resample(dem, grid, method = "near", threads = TRUE))
-        print("<!> Warning - The input DEM has been resampled to a 25m-pixel spatial resolution.")
+        cat("<!> Warning - The input DEM has been resampled to a 25m-pixel spatial resolution.\n")
     }
     if (terra::nlyr(dem) > 1) {
         try(dem <- dem[[1]])
-        print("<!> Warning - The input DEM contains more than one elevation layer. Only the first one is considered.")
+        cat("<!> Warning - The input DEM contains more than one elevation layer. Only the first one is considered.\n")
     }
     if (any(is.na(terra::values(dem))) == TRUE) {
         try(dem[is.na(dem)] <- 0)
-        print("<!> Warning - The input DEM contains pixels with NA values. They have been assigned a value of 0.")
+        cat("<!> Warning - The input DEM contains pixels with NA values. They have been assigned a value of 0.\n")
     }
 
     bbox <- terra::vect(terra::ext(dem))
@@ -61,8 +61,8 @@ topo_comp <- function(dem) {
             stop("!! ERROR - The input DEM is not within the validity range of the phenological model.")
         }
 
-    print("== TOPOGRAPHY COMPUTER -- OK ==")
-    print("===============================")
+    cat("== TOPOGRAPHY COMPUTER -- OK ==\n")
+    cat("===============================\n")
     gc()
 
     return(topography)
@@ -88,7 +88,7 @@ drias_reader <- function(drias_txt_path, smoothing = FALSE) {
     drias_table <- utils::read.table(drias_txt_path, sep = ",", row.names = NULL)
     names(drias_table) <- c("id", "X93", "Y93", "date", "tmin", "tmax", "tmean", "pr_tot", "spec_hum", "vis_solrad", "ir_solrad", "wind")
 
-    print("===== DAY OF YEAR =====")
+    cat("===== DAY OF YEAR =====\n")
     stations <- unique(drias_table$id)
     years <- unique(as.numeric(substr(drias_table$date, 7, 10)))
     results <- list()
@@ -97,7 +97,10 @@ drias_reader <- function(drias_txt_path, smoothing = FALSE) {
         station_data <- drias_table[drias_table$id == station, ]
 
         for (year in years) {
-            year_mask <- as.numeric(substr(station_data$date, 7, 10)) == year
+            
+            year_mask <- tryCatch({
+                as.numeric(substr(station_data$date, 7, 10)) == year},
+                error = function(e) {stop(cat(paste0("!! ERROR -  Impossible to extract and convert records dates for station ", station, ".\n")))})
             doy_val <- seq_len(sum(year_mask))
             station_data$doy[year_mask] <- doy_val
         }
@@ -131,8 +134,8 @@ drias_reader <- function(drias_txt_path, smoothing = FALSE) {
     drias_table <- cbind(drias_table[, 1:4], drias_table[, "doy"], drias_table[, 5:12])
     names(drias_table) <- c("id", "X93", "Y93", "date", "doy", "tmin", "tmax", "tmean", "pr_tot", "spec_hum", "vis_solrad", "ir_solrad", "wind")
 
-    print("== DAY OF YEAR -- OK ==")
-    print("=======================")
+    cat("== DAY OF YEAR -- OK ==\n")
+    cat("=======================\n")
     gc()
 
     return(drias_table)
@@ -150,7 +153,7 @@ drias_reader <- function(drias_txt_path, smoothing = FALSE) {
 #' }
 #' @export
 phloem_rm <- function(drias_table) {
-    print("===== RADIATIVE MODEL FOR UNDER-PHLOEM TEMPERATURE CALCULATION =====")
+    cat("===== RADIATIVE MODEL FOR UNDER-PHLOEM TEMPERATURE CALCULATION =====\n")
 
     beta_vis_solrad <- 0.02
     beta_ir_solrad <- 0.03
@@ -170,8 +173,8 @@ phloem_rm <- function(drias_table) {
     drias_table$tmax_phloem <- pmin(drias_table$tmax + 2.5, drias_table$tmax_phloem)
     drias_table$tmean_phloem <- pmin(drias_table$tmean + 2.5, drias_table$tmean_phloem)
     
-    print("== RADIATIVE MODEL FOR UNDER-PHLOEM TEMPERATURE CALCULATION -- OK ==")
-    print("====================================================================")
+    cat("== RADIATIVE MODEL FOR UNDER-PHLOEM TEMPERATURE CALCULATION -- OK ==\n")
+    cat("====================================================================\n")
     gc()
 
     drias_table <- cbind(drias_table[, 1:5], drias_table[, "tmin"], drias_table[, "tmin_phloem"], drias_table[, "tmax"], drias_table[, "tmax_phloem"], drias_table[, "tmean"], drias_table[, "tmean_phloem"], drias_table[, 12:16])
@@ -193,7 +196,7 @@ phloem_rm <- function(drias_table) {
 #' }
 #' @export
 awakening <- function(drias_table, topography) {
-    print("===== AWAKENING CALCULATION =====")
+    cat("===== AWAKENING CALCULATION =====\n")
     
     stations <- unique(drias_table$id)
 
@@ -221,6 +224,8 @@ awakening <- function(drias_table, topography) {
         awakening_day <- ceiling(awakening_day * exp(0.2 * csi_table$csi_adj_log))
         if (awakening_day > 365) {
             awakening_day <- 0
+            cat(paste0("<!> Warning - awakening() returned a 0-doy for the station ", station, ", meaning adult bark-beetles won't awake this year.\n"))
+            cat("<!> Warning - It's caused by inadapted climate conditions.\n")
         }
 
         coords <- station_data[1, c("X93", "Y93")]
@@ -229,8 +234,8 @@ awakening <- function(drias_table, topography) {
         return(awakening_table)
     })
 
-    print("== AWAKENING CALCULATION -- OK ==")
-    print("=================================")
+    cat("== AWAKENING CALCULATION -- OK ==\n")
+    cat("=================================\n")
     gc()
     
     return(do.call(rbind, results))
@@ -250,7 +255,7 @@ awakening <- function(drias_table, topography) {
 #' }
 #' @export
 swarming <- function(drias_table, awakening_table, topography) {
-    print("===== SWARMING CALCULATION =====")
+    cat("===== SWARMING CALCULATION =====\n")
 
     stations <- unique(drias_table$id)
 
@@ -259,8 +264,15 @@ swarming <- function(drias_table, awakening_table, topography) {
         awakening_day <- awakening_table$awakening_doy[awakening_table$id == station]
 
         swarming_day <- max(station_data$doy[station_data$doy > awakening_day & station_data$tmean >= 16.11 & station_data$tmax <= 31.29], awakening_day + 1)
-        if (awakening_day == 0 || swarming_day > 365) {
+        if (awakening_day == 0) {
             swarming_day <- 0
+            cat(paste0("<!> Warning - swarming() returned a 0-doy for station ", station, " meaning adult bark-beetles won't swarm this year.\n"))
+            cat("<!> Warning - It's caused by an impossible awakening day (check awakening's results)\n")
+        }
+        if (swarming_day > 365) {
+            swarming_day <- 0
+            cat(paste0("<!> Warning - swarming() returned a 0-doy for station ", station, " meaning adult bark-beetles won't swarm this year.\n"))
+            cat("<!> Warning - It's caused by inadapted climate conditions.\n")
         }
 
         coords <- station_data[1, c("X93", "Y93")]
@@ -269,8 +281,8 @@ swarming <- function(drias_table, awakening_table, topography) {
         return(swarming_table)
     })
 
-    print("== SWARMING CALCULATION -- OK ==")
-    print("================================")
+    cat("== SWARMING CALCULATION -- OK ==\n")
+    cat("================================\n")
     gc()
     
     return(do.call(rbind, results))
@@ -290,7 +302,7 @@ swarming <- function(drias_table, awakening_table, topography) {
 #' }
 #' @export
 maturing <- function(drias_table, swarming_table, topography) {
-    print("===== MATURING CALCULATION =====")
+    cat("===== MATURING CALCULATION =====\n")
 
     stations <- unique(drias_table$id)
 
@@ -328,11 +340,35 @@ maturing <- function(drias_table, swarming_table, topography) {
 
             maturing_day <- ceiling(maturing_day * exp(0.005 * csi_table$csi_adj_log * mdi_table$mdi_log))
         } else {
+            station_point <- terra::vect(station_data, geom = c("X93", "Y93"), crs = "EPSG:27572")
+            terra::crs(station_point) <- "EPSG:27572"
+            station_point <- terra::project(station_point, terra::crs(topography))
+            station_data$alt <- terra::extract(topography$alt, station_point)[, 2]
+            station_data$aspect <- terra::extract(topography$aspect, station_point)[, 2]
+
+            csi_table <- stats::aggregate(cbind(vis_solrad, ir_solrad) ~ id, data = station_data, sum, na.rm = TRUE)
+            csi_table$csi <- csi_table$vis_solrad + csi_table$ir_solrad
+            topo_table <- stats::aggregate(cbind(alt, aspect) ~ id, data = station_data, stats::median, na.rm = TRUE)
+            csi_table <- merge(csi_table, topo_table, by = "id")
+            csi_table$csi_adj <- pmax(round(csi_table$csi * cos(csi_table$aspect * pi / 180) * (1 - (csi_table$alt / 3500)), 2), 0)
+            csi_table$csi_adj_log <- log1p(csi_table$csi_adj)
+
+            mdi_table <- stats::aggregate(cbind(pr_tot, tmean) ~ id, data = station_data, sum, na.rm = TRUE)
+            mdi_table$pr_t <- mdi_table$pr_tot / mdi_table$tmean
+            topo_table <- stats::aggregate(cbind(alt, aspect) ~ id, data = station_data, stats::median, na.rm = TRUE)
+            mdi_table <- merge(mdi_table, topo_table, by = "id")
+            mdi_table$mdi <- pmax(round(mdi_table$pr_t * cos(mdi_table$aspect * pi / 180) * (1 - (mdi_table$alt / 3500)), 2), 0)
+            mdi_table$mdi_log <- log1p(mdi_table$mdi)
+
             maturing_day <- 0
+            cat(paste0("<!> Warning - maturing() returned a 0-doy for station ", station, " meaning bark-beetle pupae won't mature this year.\n"))
+            cat("<!> Warning - It's caused by an impossible swarming day.\n")
         }
 
         if (maturing_day > 365) {
             maturing_day <- 0
+            cat(paste0("<!> Warning - maturing() returned a 0-doy for station ", station, " meaning bark-beetle pupae won't mature this year.\n"))
+            cat("<!> Warning - It's caused by inadapted climate conditions.\n")
         }
 
         coords <- station_data[1, c("X93", "Y93")]
@@ -341,8 +377,8 @@ maturing <- function(drias_table, swarming_table, topography) {
         return(maturing_table)
     })
     
-    print("== MATURING CALCULATION -- OK ==")
-    print("================================")
+    cat("== MATURING CALCULATION -- OK ==\n")
+    cat("================================\n")
     gc()
     
     return(do.call(rbind, results))
@@ -363,7 +399,7 @@ maturing <- function(drias_table, swarming_table, topography) {
 #' }
 #' @export
 kpi <- function(awakening_table, swarming_table, maturing_table, topography) {
-    print("===== PHENOLOGICAL INDICATORS SPATIALISATION =====")
+    cat("===== PHENOLOGICAL INDICATORS SPATIALISATION =====\n")
 
     pheno_data <- Reduce(function(x, y) merge(x, y, by = c("id", "X93", "Y93"), all = TRUE), list(awakening_table, swarming_table, maturing_table))
     pheno_data <- pheno_data[, c(1:4, 6:7)]
@@ -377,7 +413,9 @@ kpi <- function(awakening_table, swarming_table, maturing_table, topography) {
     grid_sf <- sf::st_as_sf(grid_df, coords = c("x", "y"), crs = 27572)
     pheno_ind <- terra::rast()
 
-    if (length(pheno_data$id) < 50) {
+    if (length(pheno_data$id) < 150) {
+        cat("<!> Warning - The number of DRIAS points is not enough to fit a semi-variogram and proceed to a kriging spatialization.\n")
+        cat("<!> Warning - An IDW algorithm is used instead.\n")
         idw_spationer <- function(var) {
             formula <- stats::as.formula(paste(var, "~1"))
 
@@ -388,6 +426,7 @@ kpi <- function(awakening_table, swarming_table, maturing_table, topography) {
             idwed_ind <- terra::rast(idw_df, type = "xyz", crs = terra::crs(grid))
             idwed_ind <- terra::resample(idwed_ind, grid, method = "near")
             idwed_ind[is.na(topography$spruce_forests)] <- NA
+            idwed_ind[idwed_ind < 0] <- 0
             terra::values(idwed_ind) <- ceiling(terra::values(idwed_ind))
             names(idwed_ind) <- var
 
@@ -398,7 +437,8 @@ kpi <- function(awakening_table, swarming_table, maturing_table, topography) {
         pheno_ind <- do.call(c, idwed_vars)
     }
 
-    if (length(pheno_data$id) >= 50) {
+    if (length(pheno_data$id) >= 150) {
+        cat("<!> Warning - The number of DRIAS points is enough to fit a semi-variogram and proceed to a kriging spatialization.\n")
         krig_spationer <- function(var) {
             formula <- stats::as.formula(paste(var, "~1"))
             vgm_model <- gstat::variogram(formula, data = pheno_sf)
@@ -411,6 +451,7 @@ kpi <- function(awakening_table, swarming_table, maturing_table, topography) {
             kriged_ind <- terra::rast(krig_df, type = "xyz", crs = terra::crs(grid))
             kriged_ind <- terra::resample(kriged_ind, grid, method = "near")
             kriged_ind[is.na(topography$spruce_forests)] <- NA
+            kriged_ind[kriged_ind < 0] <- 0
             terra::values(kriged_ind) <- ceiling(terra::values(kriged_ind))
             names(kriged_ind) <- var
 
@@ -421,8 +462,8 @@ kpi <- function(awakening_table, swarming_table, maturing_table, topography) {
         pheno_ind <- do.call(c, kriged_vars)
     }
 
-    print("== PHENOLOGICAL INDICATORS SPATIALISATION -- OK ==")
-    print("==================================================")
+    cat("== PHENOLOGICAL INDICATORS SPATIALISATION -- OK ==\n")
+    cat("==================================================\n")
     gc()
 
     return(pheno_ind)
@@ -440,21 +481,23 @@ kpi <- function(awakening_table, swarming_table, maturing_table, topography) {
 #' }
 #' @export
 rpc <- function(pheno_ind) {
-    print("===== Rpheno CALCULATION =====")
+    cat("===== Rpheno CALCULATION =====\n")
 
-    awakening_map <- pheno_ind[[which(names(pheno_ind) == "awakening_doy")]]
-    swarming_map <- pheno_ind[[which(names(pheno_ind) == "swarming_doy")]]
-    maturing_map <- pheno_ind[[which(names(pheno_ind) == "maturing_doy")]]
+    awakening_doy <- pheno_ind$awakening_doy
+    swarming_doy <- pheno_ind$swarming_doy
+    maturing_doy <- pheno_ind$maturing_doy
 
-    awakening_prob <- (awakening_map - terra::minmax(awakening_map)[1]) / (terra::minmax(awakening_map)[2] - terra::minmax(awakening_map)[1])
-    swarming_prob <- (swarming_map - terra::minmax(swarming_map)[1]) / (terra::minmax(swarming_map)[2] - terra::minmax(swarming_map)[1])
-    maturing_prob <- (maturing_map - terra::minmax(maturing_map)[1]) / (terra::minmax(maturing_map)[2] - terra::minmax(maturing_map)[1])
+    norm_awakening <- 1 - (awakening_doy - 1) / 365
+    norm_swarming <- 1 - (swarming_doy - 1) / 365
+    norm_maturing <- 1 - (maturing_doy - 1) / 365
 
-    rpheno <- awakening_prob * swarming_prob * maturing_prob
+    rpheno <- norm_awakening * norm_swarming * norm_maturing
+    rpheno[(awakening_doy == 0) | (swarming_doy == 0) | (maturing_doy == 0)] <- 0
+    rpheno[(awakening_doy == 365) | (swarming_doy == 365) | (maturing_doy == 365)] <- 0
     names(rpheno) <- "Rpheno"
 
-    print("== Rpheno CALCULATION -- OK ==")
-    print("==============================")
+    cat("== Rpheno CALCULATION -- OK ==\n")
+    cat("==============================\n")
     gc()
 
     return(rpheno)
@@ -474,41 +517,42 @@ rpc <- function(pheno_ind) {
 #' }
 #' @export
 pipeline <- function(drias_txt_path, dem) {
-    print("")
-    print("+--------------------------------------------------------------------------------------------------+")
-    print("|------------------------------------- B2SPM INITIALISATION... -------------------------------------|")
-    print("+--------------------------------------------------------------------------------------------------+")
-    print("")
+    cat("\n")
+    cat("+--------------------------------------------------------------------------------------------------+\n")
+    cat("|-------------------------------- B2SPM PIPELINE INITIALISATION... --------------------------------|\n")
+    cat("+--------------------------------------------------------------------------------------------------+\n")
+    cat("\n")
 
     topography <- topo_comp(dem)
-    print("")
+    cat("\n")
 
     drias_table <- drias_reader(drias_txt_path)
-    print("")
+    cat("\n")
 
     drias_table <- phloem_rm(drias_table)
-    print("")
+    cat("\n")
 
     awakening_table <- awakening(drias_table, topography)
-    print("")
+    cat("\n")
     swarming_table <- swarming(drias_table, awakening_table, topography)
-    print("")
+    cat("\n")
     maturing_table <- maturing(drias_table, swarming_table, topography)
-    print("")
+    cat("\n")
 
     pheno_ind <- kpi(awakening_table, swarming_table, maturing_table, topography)
-    print("")
+    cat("\n")
 
     rpheno <- rpc(pheno_ind)
-    print("")
+    cat("\n")
 
     results <- c(pheno_ind, rpheno)
 
-    print("")
-    print("+--------------------------------------------------------------------------------------------------+")
-    print("|##################################################################################################|")
-    print("+--------------------------------------------------------------------------------------------------+")
-    print("")
+    cat("\n")
+    cat("+--------------------------------------------------------------------------------------------------+\n")
+    cat("|-------------------------------------- B2SPM PIPELINE -- OK --------------------------------------|\n")
+    cat("|##################################################################################################|\n")
+    cat("+--------------------------------------------------------------------------------------------------+\n")
+    cat("\n")
 
     return(results)
 }
