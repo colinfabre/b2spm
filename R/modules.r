@@ -124,7 +124,7 @@ drias_reader <- function(drias_txt_path, smoothing = FALSE) {
             pack <- (length(years) - 1) / 2
             yta <- years[pack + 1]
 
-            mean_values <- aggregate(temp[, 6:13], by = list(doy = temp$doy), FUN = mean)
+            mean_values <- stats::aggregate(temp[, 6:13], by = list(doy = temp$doy), FUN = mean)
             yta_mask <- as.numeric(substr(drias_table$date, 7, 10)) == yta
             doy_indices <- match(drias_table$doy[yta_mask], mean_values$doy)
             drias_table[yta_mask, 6:13] <- mean_values[doy_indices, -1]
