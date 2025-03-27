@@ -413,13 +413,13 @@ kpi <- function(awakening_table, swarming_table, maturing_table, topography) {
     grid_sf <- sf::st_as_sf(grid_df, coords = c("x", "y"), crs = 27572)
     pheno_ind <- terra::rast()
 
-    if (length(pheno_data$id) < 150) {
+    if (length(pheno_data$id) < 50) {
         cat("<!> Warning - The number of DRIAS points is not enough to fit a semi-variogram and proceed to a kriging spatialization.\n")
         cat("<!> Warning - An IDW algorithm is used instead.\n")
         idw_spationer <- function(var) {
             formula <- stats::as.formula(paste(var, "~1"))
 
-            idw_result <- gstat::idw(formula = formula, locations = pheno_sf, newdata = grid_sf, idp = 1, nmax = 8, debug.level = -1)
+            idw_result <- gstat::idw(formula = formula, locations = pheno_sf, newdata = grid_sf, idp = 0.5, nmax = 8, debug.level = -1)
             idw_df <- cbind(sf::st_coordinates(idw_result), idw_result$var1.pred)
             colnames(idw_df) <- c("x", "y", var)
 
@@ -437,7 +437,7 @@ kpi <- function(awakening_table, swarming_table, maturing_table, topography) {
         pheno_ind <- do.call(c, idwed_vars)
     }
 
-    if (length(pheno_data$id) >= 150) {
+    if (length(pheno_data$id) >= 50) {
         cat("<!> Warning - The number of DRIAS points is enough to fit a semi-variogram and proceed to a kriging spatialization.\n")
         krig_spationer <- function(var) {
             formula <- stats::as.formula(paste(var, "~1"))
@@ -483,17 +483,12 @@ kpi <- function(awakening_table, swarming_table, maturing_table, topography) {
 rpc <- function(pheno_ind) {
     cat("===== Rpheno CALCULATION =====\n")
 
-    awakening_doy <- pheno_ind$awakening_doy
-    swarming_doy <- pheno_ind$swarming_doy
-    maturing_doy <- pheno_ind$maturing_doy
+    prob_awakening <- (-0.0028 * pheno_ind$awakening_doy) + 1.0282
+    prob_swarming <- (-0.0028 * pheno_ind$swarming_doy) + 1.0311
+    prob_maturing <- (-0.0032 * pheno_ind$maturing_doy) + 1.1699
 
-    norm_awakening <- 1 - (awakening_doy - 1) / 365
-    norm_swarming <- 1 - (swarming_doy - 1) / 365
-    norm_maturing <- 1 - (maturing_doy - 1) / 365
-
-    rpheno <- norm_awakening * norm_swarming * norm_maturing
-    rpheno[(awakening_doy == 0) | (swarming_doy == 0) | (maturing_doy == 0)] <- 0
-    rpheno[(awakening_doy == 365) | (swarming_doy == 365) | (maturing_doy == 365)] <- 0
+    rpheno <- round(prob_awakening * prob_swarming * prob_maturing, 2)
+    rpheno[rpheno < 0] <- 0
     names(rpheno) <- "Rpheno"
 
     cat("== Rpheno CALCULATION -- OK ==\n")
@@ -550,7 +545,6 @@ pipeline <- function(drias_txt_path, dem) {
     cat("\n")
     cat("+--------------------------------------------------------------------------------------------------+\n")
     cat("|-------------------------------------- B2SPM PIPELINE -- OK --------------------------------------|\n")
-    cat("|##################################################################################################|\n")
     cat("+--------------------------------------------------------------------------------------------------+\n")
     cat("\n")
 
