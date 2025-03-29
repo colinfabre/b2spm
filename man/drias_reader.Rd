@@ -7,12 +7,12 @@
 drias_reader(drias_txt_path, smoothing = FALSE)
 }
 \arguments{
-\item{drias_txt_path}{The path to the text file containing DRIAS climatic data. The data should be comma-separated, the date should be in DD/MM/YYYY format, and it should include tmin (°C), tmax (°C), tmean (°C), pr_tot (mm), spec_hum (kg/kg), vis_solrad (W/m2), ir_solrad (W/m2), and wind (m/s).}
+\item{drias_txt_path}{The path to the text file containing DRIAS climatic data. The data must be comma-separated, the date must be in DD/MM/YYYY format, and it must include tmin (K), tmax (K), tmean (K), tot_pr (kg/m2/s), spec_hum (kg/kg), vis_solrad (W/m2), ir_solrad (W/m2), and wind (m/s).}
 
 \item{smoothing}{Should the data be averaged around the central year (must provide an odd number of years). Simulated climate data are usually averaged with a 10-year range on either side of the central year to analyze.}
 }
 \value{
-A data.frame containing the columns: `id`, `X93`, `Y93`, `date`, `doy`, `tmin`, `tmax`, `tmean`, `pr_tot`, `spec_hum`, `vis_solrad`, `ir_solrad`, `wind`.
+A data.frame containing the columns: `id`, `X93`, `Y93`, `date`, `doy`, `tmin`, `tmax`, `tmean`, `tot_pr`, `spec_hum`, `vis_solrad`, `ir_solrad`, `wind`.
 }
 \description{
 This function reads a text file containing climatic data from DRIAS and formats it into a dataframe compatible with the B2SPM pipeline.

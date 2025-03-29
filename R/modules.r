@@ -72,9 +72,9 @@ topo_comp <- function(dem) {
 #'
 #' This function reads a text file containing climatic data from DRIAS and formats it into a dataframe compatible with the B2SPM pipeline.
 #'
-#' @param drias_txt_path The path to the text file containing DRIAS climatic data. The data should be comma-separated, the date should be in DD/MM/YYYY format, and it should include tmin (°C), tmax (°C), tmean (°C), pr_tot (mm), spec_hum (kg/kg), vis_solrad (W/m2), ir_solrad (W/m2), and wind (m/s).
+#' @param drias_txt_path The path to the text file containing DRIAS climatic data. The data must be comma-separated, the date must be in DD/MM/YYYY format, and it must include tmin (K), tmax (K), tmean (K), tot_pr (kg/m2/s), spec_hum (kg/kg), vis_solrad (W/m2), ir_solrad (W/m2), and wind (m/s).
 #' @param smoothing Should the data be averaged around the central year (must provide an odd number of years). Simulated climate data are usually averaged with a 10-year range on either side of the central year to analyze.
-#' @return A data.frame containing the columns: `id`, `X93`, `Y93`, `date`, `doy`, `tmin`, `tmax`, `tmean`, `pr_tot`, `spec_hum`, `vis_solrad`, `ir_solrad`, `wind`.
+#' @return A data.frame containing the columns: `id`, `X93`, `Y93`, `date`, `doy`, `tmin`, `tmax`, `tmean`, `tot_pr`, `spec_hum`, `vis_solrad`, `ir_solrad`, `wind`.
 #' @examples
 #' \dontrun{
 #'  drias_table <- drias_reader("Chablais_2030.txt")
@@ -86,7 +86,7 @@ drias_reader <- function(drias_txt_path, smoothing = FALSE) {
     }
 
     drias_table <- utils::read.table(drias_txt_path, sep = ",", row.names = NULL)
-    names(drias_table) <- c("id", "X93", "Y93", "date", "tmin", "tmax", "tmean", "pr_tot", "spec_hum", "vis_solrad", "ir_solrad", "wind")
+    names(drias_table) <- c("id", "X93", "Y93", "date", "tmin", "tmax", "tmean", "tot_pr", "spec_hum", "vis_solrad", "ir_solrad", "wind")
 
     cat("===== DAY OF YEAR =====\n")
     stations <- unique(drias_table$id)
@@ -132,7 +132,12 @@ drias_reader <- function(drias_txt_path, smoothing = FALSE) {
     } else {drias_table <- temp}
 
     drias_table <- cbind(drias_table[, 1:4], drias_table[, "doy"], drias_table[, 5:12])
-    names(drias_table) <- c("id", "X93", "Y93", "date", "doy", "tmin", "tmax", "tmean", "pr_tot", "spec_hum", "vis_solrad", "ir_solrad", "wind")
+    names(drias_table) <- c("id", "X93", "Y93", "date", "doy", "tmin", "tmax", "tmean", "tot_pr", "spec_hum", "vis_solrad", "ir_solrad", "wind")
+
+    drias_table$tmin <- drias_table$tmin - 273.15
+    drias_table$tmax <- drias_table$tmax - 273.15
+    drias_table$tmean <- drias_table$tmean - 273.15
+    drias_table$tot_pr <- drias_table$tot_pr * 86400
 
     cat("== DAY OF YEAR -- OK ==\n")
     cat("=======================\n")
@@ -178,7 +183,7 @@ phloem_rm <- function(drias_table) {
     gc()
 
     drias_table <- cbind(drias_table[, 1:5], drias_table[, "tmin"], drias_table[, "tmin_phloem"], drias_table[, "tmax"], drias_table[, "tmax_phloem"], drias_table[, "tmean"], drias_table[, "tmean_phloem"], drias_table[, 12:16])
-    names(drias_table) <- c("id", "X93", "Y93", "date", "doy", "tmin", "tmin_phloem", "tmax", "tmax_phloem", "tmean", "tmean_phloem", "pr_tot", "spec_hum", "vis_solrad", "ir_solrad", "wind")
+    names(drias_table) <- c("id", "X93", "Y93", "date", "doy", "tmin", "tmin_phloem", "tmax", "tmax_phloem", "tmean", "tmean_phloem", "tot_pr", "spec_hum", "vis_solrad", "ir_solrad", "wind")
 
     return(drias_table)
 }
@@ -331,8 +336,8 @@ maturing <- function(drias_table, swarming_table, topography) {
             csi_table$csi_adj <- pmax(round(csi_table$csi * cos(csi_table$aspect * pi / 180) * (1 - (csi_table$alt / 3500)), 2), 0)
             csi_table$csi_adj_log <- log1p(csi_table$csi_adj)
 
-            mdi_table <- stats::aggregate(cbind(pr_tot, tmean) ~ id, data = topomod_data, sum, na.rm = TRUE)
-            mdi_table$pr_t <- mdi_table$pr_tot / mdi_table$tmean
+            mdi_table <- stats::aggregate(cbind(tot_pr, tmean) ~ id, data = topomod_data, sum, na.rm = TRUE)
+            mdi_table$pr_t <- mdi_table$tot_pr / mdi_table$tmean
             topo_table <- stats::aggregate(cbind(alt, aspect) ~ id, data = topomod_data, stats::median, na.rm = TRUE)
             mdi_table <- merge(mdi_table, topo_table, by = "id")
             mdi_table$mdi <- pmax(round(mdi_table$pr_t * cos(mdi_table$aspect * pi / 180) * (1 - (mdi_table$alt / 3500)), 2), 0)
@@ -353,8 +358,8 @@ maturing <- function(drias_table, swarming_table, topography) {
             csi_table$csi_adj <- pmax(round(csi_table$csi * cos(csi_table$aspect * pi / 180) * (1 - (csi_table$alt / 3500)), 2), 0)
             csi_table$csi_adj_log <- log1p(csi_table$csi_adj)
 
-            mdi_table <- stats::aggregate(cbind(pr_tot, tmean) ~ id, data = station_data, sum, na.rm = TRUE)
-            mdi_table$pr_t <- mdi_table$pr_tot / mdi_table$tmean
+            mdi_table <- stats::aggregate(cbind(tot_pr, tmean) ~ id, data = station_data, sum, na.rm = TRUE)
+            mdi_table$pr_t <- mdi_table$tot_pr / mdi_table$tmean
             topo_table <- stats::aggregate(cbind(alt, aspect) ~ id, data = station_data, stats::median, na.rm = TRUE)
             mdi_table <- merge(mdi_table, topo_table, by = "id")
             mdi_table$mdi <- pmax(round(mdi_table$pr_t * cos(mdi_table$aspect * pi / 180) * (1 - (mdi_table$alt / 3500)), 2), 0)

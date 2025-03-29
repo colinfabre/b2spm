@@ -18,6 +18,8 @@
 - [Usage Example](#usage-example)
 - [References](#references)
 - [Citation](#citation)
+- [Releases Notes](#releases-notes)
+  - [v1.1](#v11)
 
 ## Introduction
 
@@ -102,7 +104,7 @@ Data downloaded from DRIAS-2020 must be provided as `.txt` files (native format)
 Example of an expected DRIAS file structure:
 
 ```r
-point_id, lambertx, lamberty,date,tmin,tmax,tmoy,prec,spec_hum,vis_solrad,ir_solrad,wind
+point_id, lambertx, lamberty,date,tmin,tmax,tmoy,tot_pr,spec_hum,vis_solrad,ir_solrad,wind
 ID001,908000,2129000,01/01/2030,-2.3,5.7,1.5,0.0,0.0025,150.0,220.0,2.1
 ID001,908000,2129000,02/01/2030,-1.8,6.2,2.1,0.1,0.0024,152.5,225.0,1.8
 ```
@@ -235,3 +237,22 @@ JAKOBY, O. et al. *Climate change alters elevational phenology patterns of the E
 ## Citation
 
 > FABRE, C. *B2SPM: Bark-Beetle Spatialized Phenological Model*, R package, 2025. [CrossRef](https://b2spm.colinfabre.fr)
+
+
+
+## Releases Notes
+
+### v1.1
+
+The `drias_reader(drias_txt_path)` function now only supports DRIAS tables with parameters in the model's native format (for harmonization purpose).
+
+The supported formats for parameters to run B2SPM are now:
+
+- Daily minimum temperature (K)
+- Daily maximum temperature (K)
+- Daily average temperature (K)
+- Total daily precipitation (kg/m²/s)
+- Specific humidity (kg/kg)
+- Incident visible solar radiation (W/m²)
+- Incident infrared solar radiation (W/m²)
+- Wind speed (m/s)
