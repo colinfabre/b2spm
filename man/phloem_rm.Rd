@@ -7,7 +7,7 @@
 phloem_rm(drias_table)
 }
 \arguments{
-\item{drias_table}{The DRIAS table processed by the drias_reader() function.}
+\item{drias_table}{The DRIAS table processed either by the drias_reader() or the drias_fetcher() function.}
 }
 \value{
 The updated DRIAS table with additional columns `tmin_phloem`, `tmax_phloem`, and `tmean_phloem` containing the temperatures beneath the phloem.

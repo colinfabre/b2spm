@@ -19,6 +19,6 @@ This function reads a text file containing climatic data from DRIAS and formats 
 }
 \examples{
 \dontrun{
- drias_table <- drias_reader("Chablais_2030.txt")
+ drias_table <- drias_reader("chablais_2030.txt")
 }
 }

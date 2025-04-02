@@ -77,10 +77,14 @@ topo_comp <- function(dem) {
 #' @return A data.frame containing the columns: `id`, `X93`, `Y93`, `date`, `doy`, `tmin`, `tmax`, `tmean`, `tot_pr`, `spec_hum`, `vis_solrad`, `ir_solrad`, `wind`.
 #' @examples
 #' \dontrun{
-#'  drias_table <- drias_reader("Chablais_2030.txt")
+#'  drias_table <- drias_reader("chablais_2030.txt")
 #' }
 #' @export
 drias_reader <- function(drias_txt_path, smoothing = FALSE) {
+    cat("===== DRIAS READER =====\n")
+    if (!inherits(drias_txt_path, c("character"))) {
+        stop("!! ERROR - 'drias_txt_path' must be a valid string reaching to the DRIAS .txt file.")
+    }
     if (!is.logical(smoothing)) {
         stop("!! ERROR - 'smoothing' must be TRUE or FALSE.")
     }
@@ -88,7 +92,6 @@ drias_reader <- function(drias_txt_path, smoothing = FALSE) {
     drias_table <- utils::read.table(drias_txt_path, sep = ",", row.names = NULL)
     names(drias_table) <- c("id", "X93", "Y93", "date", "tmin", "tmax", "tmean", "tot_pr", "spec_hum", "vis_solrad", "ir_solrad", "wind")
 
-    cat("===== DAY OF YEAR =====\n")
     stations <- unique(drias_table$id)
     years <- unique(as.numeric(substr(drias_table$date, 7, 10)))
     results <- list()
@@ -139,10 +142,80 @@ drias_reader <- function(drias_txt_path, smoothing = FALSE) {
     drias_table$tmean <- drias_table$tmean - 273.15
     drias_table$tot_pr <- drias_table$tot_pr * 86400
 
-    cat("== DAY OF YEAR -- OK ==\n")
-    cat("=======================\n")
+    cat("== DRIAS READER -- OK ==\n")
+    cat("========================\n")
     gc()
 
+    return(drias_table)
+}
+
+#' drias_fetcher
+#'
+#' This function fetches the DRIAS database corresponding to the provided DEM and year, and formats it into a dataframe compatible with the B2SPM pipeline.
+#'
+#' @param topography The raster stack returned by the data_fetcher() function.
+#' @param year Year of analysis. Currently stored databases are 2050, 2075 and 2100, for the RCP8.5 scenario (cf. README).
+#' @return A data.frame containing the columns: `id`, `X93`, `Y93`, `date`, `doy`, `tmin`, `tmax`, `tmean`, `tot_pr`, `spec_hum`, `vis_solrad`, `ir_solrad`, `wind`.
+#' @examples
+#' \dontrun{
+#'  drias_table <- drias_fetcher(topography, 2050)
+#' }
+#' @export
+drias_fetcher <- function(topography, year) {
+    cat("===== DRIAS FETCHER =====\n")
+    if (!year %in% c(2050, 2075, 2100)) {
+        stop("!! ERROR - 'year' must be equal either to 2050, 2075 or 2100.")
+    }
+
+    cat("Fetching the online database corresponding to the provided year of analysis can take up to 30s.\n")
+    cat("Please wait...\n")
+    drias_points <- tryCatch({
+        terra::vect(paste0("https://github.com/colinfabre/b2spm_database/raw/refs/heads/main/alpine_arc_", year, ".gpkg"))},
+        error = function(e) {stop(cat(paste0("!! ERROR -  Impossible to fetch the online database corresponding to the provided year. Please check your internet connection.\n")))})
+    cat("The online database was correctly fetched.\n")
+    terra::crs(drias_points) <- "EPSG:27572"
+    drias_points <- terra::project(drias_points, "EPSG:2154")
+
+    roi <- terra::vect(terra::ext(topography))
+    terra::crs(roi) <- "EPSG:2154"
+
+    drias_points_roi <- terra::crop(drias_points, roi)
+    drias_table <- as.data.frame(drias_points_roi)
+    drias_table <- cbind(drias_table[, 1], terra::geom(drias_points_roi)[, c("x", "y")], drias_table[, 2:10])
+    names(drias_table) <- c("id", "X93", "Y93", "date", "tmin", "tmax", "tmean", "tot_pr", "spec_hum", "vis_solrad", "ir_solrad", "wind")
+
+    stations <- unique(drias_table$id)
+    years <- unique(as.numeric(substr(drias_table$date, 7, 10)))
+    results <- list()
+
+    for (station in stations) {
+        station_data <- drias_table[drias_table$id == station, ]
+
+        for (year in years) {
+            
+            year_mask <- tryCatch({
+                as.numeric(substr(station_data$date, 7, 10)) == year},
+                error = function(e) {stop(cat(paste0("!! ERROR -  Impossible to extract and convert records dates for station ", station, ".\n")))})
+            doy_val <- seq_len(sum(year_mask))
+            station_data$doy[year_mask] <- doy_val
+        }
+
+        results[[as.character(station)]] <- station_data
+    }
+
+    drias_table <- do.call(rbind, results)
+    drias_table <- cbind(drias_table[, 1:4], drias_table[, "doy"], drias_table[, 5:12])
+    names(drias_table) <- c("id", "X93", "Y93", "date", "doy", "tmin", "tmax", "tmean", "tot_pr", "spec_hum", "vis_solrad", "ir_solrad", "wind")
+
+    drias_table$tmin <- drias_table$tmin - 273.15
+    drias_table$tmax <- drias_table$tmax - 273.15
+    drias_table$tmean <- drias_table$tmean - 273.15
+    drias_table$tot_pr <- drias_table$tot_pr * 86400
+
+    cat("== DRIAS FETCHER -- OK ==\n")
+    cat("=========================\n")
+    gc()
+    
     return(drias_table)
 }
 
@@ -150,7 +223,7 @@ drias_reader <- function(drias_txt_path, smoothing = FALSE) {
 #'
 #' This function uses a constrained non-linear radiative model calibrated for spruce to calculate the temperatures beneath the phloem regulating bark beetle development.
 #'
-#' @param drias_table The DRIAS table processed by the drias_reader() function.
+#' @param drias_table The DRIAS table processed either by the drias_reader() or the drias_fetcher() function.
 #' @return The updated DRIAS table with additional columns `tmin_phloem`, `tmax_phloem`, and `tmean_phloem` containing the temperatures beneath the phloem.
 #' @examples
 #' \dontrun{
@@ -177,13 +250,13 @@ phloem_rm <- function(drias_table) {
     drias_table$tmin_phloem <- pmin(drias_table$tmin + 2.5, drias_table$tmin_phloem)
     drias_table$tmax_phloem <- pmin(drias_table$tmax + 2.5, drias_table$tmax_phloem)
     drias_table$tmean_phloem <- pmin(drias_table$tmean + 2.5, drias_table$tmean_phloem)
-    
-    cat("== RADIATIVE MODEL FOR UNDER-PHLOEM TEMPERATURE CALCULATION -- OK ==\n")
-    cat("====================================================================\n")
-    gc()
 
     drias_table <- cbind(drias_table[, 1:5], drias_table[, "tmin"], drias_table[, "tmin_phloem"], drias_table[, "tmax"], drias_table[, "tmax_phloem"], drias_table[, "tmean"], drias_table[, "tmean_phloem"], drias_table[, 12:16])
     names(drias_table) <- c("id", "X93", "Y93", "date", "doy", "tmin", "tmin_phloem", "tmax", "tmax_phloem", "tmean", "tmean_phloem", "tot_pr", "spec_hum", "vis_solrad", "ir_solrad", "wind")
+
+    cat("== RADIATIVE MODEL FOR UNDER-PHLOEM TEMPERATURE CALCULATION -- OK ==\n")
+    cat("====================================================================\n")
+    gc()
 
     return(drias_table)
 }
@@ -505,28 +578,21 @@ rpc <- function(pheno_ind) {
 
 #' pipeline
 #'
-#' Runs the entire B2SPM pipeline, from reading DRIAS data to spatializing the attack risk and number of attacks per year.
+#' Runs the entire B2SPM pipeline, from computing under-phloem temperatures to spatializing the attack risk.
 #'
-#' @param drias_txt_path Path to the DRIAS file containing daily meteorological data.
-#' @param dem A raster (preferably a SpatRaster in EPSG:2154) representing elevation, covering the entire study area plus a 5-pixel buffer.
+#' @param topography The raster stack returned by the topo_comp() function.
+#' @param drias_table The DRIAS table processed either by the drias_reader() or the drias_fetcher() function.
 #' @return A raster stack containing the spatialized phenological indicators (`awakening_doy`, `swarming_doy`, `maturing_doy`), the attack risk (`Rpheno`), and the maximum number of generations per year (`max_gen`).
 #' @examples
 #' \dontrun{
-#'  dem <- terra::rast("dem_roi.tif")
-#'  results <- pipeline("drias.txt", bbox)
+#'  results <- pipeline(topography, drias_table)
 #' }
 #' @export
-pipeline <- function(drias_txt_path, dem) {
+pipeline <- function(topography, drias_table) {
     cat("\n")
     cat("+--------------------------------------------------------------------------------------------------+\n")
     cat("|-------------------------------- B2SPM PIPELINE INITIALISATION... --------------------------------|\n")
     cat("+--------------------------------------------------------------------------------------------------+\n")
-    cat("\n")
-
-    topography <- topo_comp(dem)
-    cat("\n")
-
-    drias_table <- drias_reader(drias_txt_path)
     cat("\n")
 
     drias_table <- phloem_rm(drias_table)
@@ -552,6 +618,7 @@ pipeline <- function(drias_txt_path, dem) {
     cat("|-------------------------------------- B2SPM PIPELINE -- OK --------------------------------------|\n")
     cat("+--------------------------------------------------------------------------------------------------+\n")
     cat("\n")
+    gc()
 
     return(results)
 }

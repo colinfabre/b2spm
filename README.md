@@ -237,22 +237,3 @@ JAKOBY, O. et al. *Climate change alters elevational phenology patterns of the E
 ## Citation
 
 > FABRE, C. *B2SPM: Bark-Beetle Spatialized Phenological Model*, R package, 2025. [CrossRef](https://b2spm.colinfabre.fr)
-
-
-
-## Releases Notes
-
-### v1.1
-
-The `drias_reader(drias_txt_path)` function now only supports DRIAS tables with parameters in the model's native format (for harmonization purpose).
-
-The supported formats for parameters to run B2SPM are now:
-
-- Daily minimum temperature (K)
-- Daily maximum temperature (K)
-- Daily average temperature (K)
-- Total daily precipitation (kg/m²/s)
-- Specific humidity (kg/kg)
-- Incident visible solar radiation (W/m²)
-- Incident infrared solar radiation (W/m²)
-- Wind speed (m/s)
