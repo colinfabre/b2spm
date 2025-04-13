@@ -17,7 +17,6 @@
   - [Radiative Model](#radiative-model-for-sub-phloem-temperature)
 - [Usage Example](#usage-example)
 - [References](#references)
-- [Citation](#citation)
 
 ## Introduction
 
@@ -73,14 +72,15 @@ The user can select the desired study year and extract all DRIAS points containe
 
 The climate parameters required to run B2SPM are:
 
-- Daily minimum temperature (°C)
-- Daily maximum temperature (°C)
-- Daily average temperature (°C)
-- Total daily precipitation (mm)
+- Daily minimum temperature (K)
+- Daily maximum temperature (K)
+- Daily average temperature (K)
+- Total daily precipitation (kg/m²/s)
 - Specific humidity (kg/kg)
 - Incident visible solar radiation (W/m²)
 - Incident infrared solar radiation (W/m²)
 - Wind speed (m/s)
+- Potential evapotranspiration (kg/m²/s)
 
 <p align="center">
   <img src="man/figures/drias_params.png" width="200" height="116">
@@ -102,9 +102,9 @@ Data downloaded from DRIAS-2020 must be provided as `.txt` files (native format)
 Example of an expected DRIAS file structure:
 
 ```r
-point_id, lambertx, lamberty,date,tmin,tmax,tmoy,prec,spec_hum,vis_solrad,ir_solrad,wind
-ID001,908000,2129000,01/01/2030,-2.3,5.7,1.5,0.0,0.0025,150.0,220.0,2.1
-ID001,908000,2129000,02/01/2030,-1.8,6.2,2.1,0.1,0.0024,152.5,225.0,1.8
+point_id, lambertx, lamberty,date,tmin,tmax,tmoy,tot_pr,spec_hum,vis_solrad,ir_solrad,wind,pet
+ID001,908000,2129000,01/01/2030,-2.3,5.7,1.5,0.0,0.0025,150.0,220.0,2.1,0.0
+ID001,908000,2129000,02/01/2030,-1.8,6.2,2.1,0.0001,0.0024,152.5,225.0,1.8,0.00005
 ```
 
 <p align="center">
@@ -115,11 +115,9 @@ ID001,908000,2129000,02/01/2030,-1.8,6.2,2.1,0.1,0.0024,152.5,225.0,1.8
 
 `topo_comp(dem)`: Extracts spruce forest areas and topographic data from the study area.
 
-`kpi(awakening_data, swarming_data, maturing_data)`: Spatializes phenological indicators.
+`drias_reader(drias_txt_path)` or `drias_fetcher(topography, year)`: Reads downloaded DRIAS data or fetches DRIAS database corresponding to the specified year and study area.
 
-`rpc(phenological_indicators)`: Calculates the global epidemic risk indicator Rpheno.
-
-**`pipeline(drias_txt_path, dem)`: Runs the complete B2SPM pipeline on the study area using the provided DRIAS data.**
+**`pipeline(topography, drias_table)`: Runs the complete B2SPM pipeline on the study area from the radiative model computation to the risk index calculation.**
 
 ### Radiative Model for Sub-Phloem Temperature
 
@@ -131,16 +129,16 @@ The bark beetle hibernates and then digs its egg-laying galleries where larvae m
 
 - Specific humidity and precipitation: high humidity and regular precipitation increase the thermal inertia of the bark, maintaining a more stable temperature (buffer effect).
 
-- Diurnal thermal gradient: the thermal inertia of the phloem reduces daily temperature amplitude, with limited elevation of tmaxphloem and moderate cooling of tminphloem.
+- Diurnal thermal gradient: the thermal inertia of the phloem reduces daily temperature amplitude, with limited elevation of $$T_{max_{phloem}}$$ and moderate cooling of $$T_{min_{phloem}}$$.
 
 A constrained non-linear radiative model accounting for the impact of these environmental variables has been directly integrated into B2SPM to model the evolution of sub-phloem temperature, which dictates bark beetle phenology. It is structured as follows:
 
-#### Heat Conduction Equation for Spruce Bark and Phloem
+#### 1. Heat Conduction Equation for Spruce Bark and Phloem
 
 $$\frac{\partial t}{\partial T_{phloem}} = \alpha \left( \frac{\partial^2 T_{phloem}}{\partial x^2} \right) + S(x,t)$$
 
 where:
-- $$T_{\text{phloem}}(x,t)$$ temperature at depth $$x$$ in the bark/phloem at time $$t$$
+- $$T_{phloem}(x,t)$$ temperature at depth $$x$$ in the bark/phloem at time $$t$$
 - $$\alpha \approx 1.2 \times 10^{-7}{m^2/s}$$ thermal diffusivity of wood $$\frac{k}{\rho C_p}$$, as a function of conductivity $$k \approx 0.15{W/m\cdot K}$$, density $$\rho \approx 600{kg/m^3}$$ (for decaying wood) and heat capacity $$C_p \approx 1600{J/kg \cdot K}$$
 - $$S(x,t)$$ source term representing solar radiation absorption in the phloem
 
@@ -185,6 +183,10 @@ with the physical constraint:
 
 $$0 \leq T_{phloem} - T_{ext} \leq 2.5^\circ C$$
 
+### Calculation of the Photoperiod Moderated by Cast Shadows
+
+
+
 
 
 ## Usage Example
@@ -210,6 +212,8 @@ plot(results_chablais$rpheno, main = "Epidemic Risk Map")
 
 FABRE, C. *ModEpiSco: Modélisation des Épidémies de Scolytes et de l'impact sur les forêts alpines françaises du Nord dans le contexte du changement climatique*, IUGA, 2023. [CrossRef](http://doi.org/10.13140/RG.2.2.14613.91362/2)
 
+SPENCER, J. W. *Fourier series representation of the position of the sun*, Search, 2(5), 172, 1971. [CrossRef](https://www.researchgate.net/publication/239574696_Fourier_series_representmon_of_the_position_of_the_sun_in_search)
+
 AMMAN, G. D. *Population changes of the mountain pine beetle in relation to elevation*, Environmental Entomology, 1973. [CrossRef](https://doi.org/10.1093/ee/2.4.541)
 
 BENTZ, B. J., MULLINS, D. E. *Ecology of mountain pine beetle cold hardening in the field: Interactions between cold and subcortical beetle behavior*, Environmental Entomology, 1999. [CrossRef](https://doi.org/10.1093/ee/28.4.577)
@@ -229,9 +233,3 @@ TRÂN, J. et al. *Impact of minimum winter temperatures on the population dynami
 FACCOLI, M. *Composition and elevation of spruce forests affect susceptibility to bark beetle attacks, implications for forest management*, Forests, 2014. [CrossRef](https://doi.org/10.3390/f5010088)
 
 JAKOBY, O. et al. *Climate change alters elevational phenology patterns of the European spruce bark*, Global Change Biology, 2019. [CrossRef](https://doi.org/10.1111/gcb.14766)
-
-
-
-## Citation
-
-> FABRE, C. *B2SPM: Bark-Beetle Spatialized Phenological Model*, R package, 2025. [CrossRef](https://b2spm.colinfabre.fr)

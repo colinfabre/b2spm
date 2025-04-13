@@ -4,22 +4,21 @@
 \alias{pipeline}
 \title{pipeline}
 \usage{
-pipeline(drias_txt_path, dem)
+pipeline(topography, drias_table)
 }
 \arguments{
-\item{drias_txt_path}{Path to the DRIAS file containing daily meteorological data.}
+\item{topography}{The raster stack returned by the topo_comp() function.}
 
-\item{dem}{A raster (preferably a SpatRaster in EPSG:2154) representing elevation, covering the entire study area plus a 5-pixel buffer.}
+\item{drias_table}{The DRIAS table processed either by the drias_reader() or the drias_fetcher() function.}
 }
 \value{
 A raster stack containing the spatialized phenological indicators (`awakening_doy`, `swarming_doy`, `maturing_doy`), the attack risk (`Rpheno`), and the maximum number of generations per year (`max_gen`).
 }
 \description{
-Runs the entire B2SPM pipeline, from reading DRIAS data to spatializing the attack risk and number of attacks per year.
+Runs the entire B2SPM pipeline, from computing under-phloem temperatures to spatializing the attack risk.
 }
 \examples{
 \dontrun{
- dem <- terra::rast("dem_roi.tif")
- results <- pipeline("drias.txt", bbox)
+ results <- pipeline(topography, drias_table)
 }
 }

@@ -51,9 +51,25 @@ topo_comp <- function(dem) {
             dem <- terra::clamp(dem, lower = 0, upper = 4810)
             dem <- round(dem, 0)
 
-            slope <- terra::terrain(dem, v = "slope", unit = "degrees")
+            slope <- terra::terrain(dem, v = "slope", unit = "radians")
+            slope[is.na(slope)] <- 0
+            slope <- terra::clamp(slope, lower = 0, upper = pi / 2)
+            if (any(abs(terra::values(slope)) > 1.1)) {
+                cat("<!> Warning - The computed topography contains pixels with a slope higher than 1.1rad (ie more than 200m of elevation gain in 25m of distance).\n")
+                cat("Make sure that no DRIAS points fall on these pixels, or expect to get aberrant phenological results.\n")
+            }
+
             aspect <- terra::terrain(dem, v = "aspect", unit = "radians")
+            aspect[is.na(aspect)] <- 0.5 * pi # as if the slope was null
+            aspect <- terra::clamp(aspect, lower = 0.5 * pi, upper = 2 * pi)
+
             tpi <- terra::terrain(dem, v = "TPI")
+            tpi[is.na(tpi)] <- 0
+            if (any(abs(terra::values(tpi)) > 200)) {
+              cat("<!> Warning - The computed topography contains pixels with shoulders higher than 200m (ie ridges above 200m of the surrounding topography in a 25m-radius).\n")
+              cat("Make sure that no DRIAS points fall on these pixels, or expect to get aberrant phenological results.\n")
+            }
+
             topography <- c(spruce_mask_bbox, dem, slope, aspect, tpi)
             names(topography) <- c("spruce_forests", "alt", "slope", "aspect", "tpi")
             terra::varnames(topography) <- c("spruce_forests", "alt", "slope", "aspect", "tpi")
@@ -72,23 +88,31 @@ topo_comp <- function(dem) {
 #'
 #' This function reads a text file containing climatic data from DRIAS and formats it into a dataframe compatible with the B2SPM pipeline.
 #'
-#' @param drias_txt_path The path to the text file containing DRIAS climatic data. The data should be comma-separated, the date should be in DD/MM/YYYY format, and it should include tmin (°C), tmax (°C), tmean (°C), pr_tot (mm), spec_hum (kg/kg), vis_solrad (W/m2), ir_solrad (W/m2), and wind (m/s).
+#' @param drias_txt_path The path to the text file containing DRIAS climatic data. The data must be comma-separated, the date must be in DD/MM/YYYY format, and it must include tmin (K), tmax (K), tmean (K), tot_pr (kg/m2/s), spec_hum (kg/kg), vis_solrad (W/m2), ir_solrad (W/m2), and wind (m/s).
 #' @param smoothing Should the data be averaged around the central year (must provide an odd number of years). Simulated climate data are usually averaged with a 10-year range on either side of the central year to analyze.
-#' @return A data.frame containing the columns: `id`, `X93`, `Y93`, `date`, `doy`, `tmin`, `tmax`, `tmean`, `pr_tot`, `spec_hum`, `vis_solrad`, `ir_solrad`, `wind`.
+#' @return A data.frame containing the columns: `id`, `X93`, `Y93`, `date`, `doy`, `tmin`, `tmax`, `tmean`, `tot_pr`, `spec_hum`, `vis_solrad`, `ir_solrad`, `wind`.
 #' @examples
 #' \dontrun{
-#'  drias_table <- drias_reader("Chablais_2030.txt")
+#'  drias_table <- drias_reader("chablais_2030.txt")
 #' }
 #' @export
 drias_reader <- function(drias_txt_path, smoothing = FALSE) {
+    cat("===== DRIAS READER =====\n")
+    if (!inherits(drias_txt_path, c("character"))) {
+        stop("!! ERROR - 'drias_txt_path' must be a valid string reaching to the DRIAS .txt file.")
+    }
     if (!is.logical(smoothing)) {
         stop("!! ERROR - 'smoothing' must be TRUE or FALSE.")
     }
 
     drias_table <- utils::read.table(drias_txt_path, sep = ",", row.names = NULL)
-    names(drias_table) <- c("id", "X93", "Y93", "date", "tmin", "tmax", "tmean", "pr_tot", "spec_hum", "vis_solrad", "ir_solrad", "wind")
+    names(drias_table) <- c("id", "X93", "Y93", "date", "tmin", "tmax", "tmean", "tot_pr", "spec_hum", "vis_solrad", "ir_solrad", "wind")
 
-    cat("===== DAY OF YEAR =====\n")
+    drias_points <- terra::vect(drias_table, geom = c("X93", "Y93"), crs = "EPSG:27572")
+    drias_points_2154 <- terra::project(drias_points, "EPSG:2154")
+    coords_2154 <- terra::crds(drias_points_2154)
+    drias_table <- cbind(drias_table[, 1], coords_2154, drias_table[, 4:12])
+
     stations <- unique(drias_table$id)
     years <- unique(as.numeric(substr(drias_table$date, 7, 10)))
     results <- list()
@@ -132,12 +156,87 @@ drias_reader <- function(drias_txt_path, smoothing = FALSE) {
     } else {drias_table <- temp}
 
     drias_table <- cbind(drias_table[, 1:4], drias_table[, "doy"], drias_table[, 5:12])
-    names(drias_table) <- c("id", "X93", "Y93", "date", "doy", "tmin", "tmax", "tmean", "pr_tot", "spec_hum", "vis_solrad", "ir_solrad", "wind")
+    names(drias_table) <- c("id", "X93", "Y93", "date", "doy", "tmin", "tmax", "tmean", "tot_pr", "spec_hum", "vis_solrad", "ir_solrad", "wind")
 
-    cat("== DAY OF YEAR -- OK ==\n")
-    cat("=======================\n")
+    drias_table$tmin <- drias_table$tmin - 273.15
+    drias_table$tmax <- drias_table$tmax - 273.15
+    drias_table$tmean <- drias_table$tmean - 273.15
+    drias_table$tot_pr <- drias_table$tot_pr * 86400
+
+    cat("== DRIAS READER -- OK ==\n")
+    cat("========================\n")
     gc()
 
+    return(drias_table)
+}
+
+#' drias_fetcher
+#'
+#' This function fetches the DRIAS database corresponding to the provided DEM and year, and formats it into a dataframe compatible with the B2SPM pipeline.
+#'
+#' @param topography The raster stack returned by the topo_comp() function.
+#' @param year Year of analysis. Currently stored databases are 2050, 2075 and 2100, for the RCP8.5 scenario (cf. README).
+#' @return A data.frame containing the columns: `id`, `X93`, `Y93`, `date`, `doy`, `tmin`, `tmax`, `tmean`, `tot_pr`, `spec_hum`, `vis_solrad`, `ir_solrad`, `wind`.
+#' @examples
+#' \dontrun{
+#'  drias_table <- drias_fetcher(topography, 2050)
+#' }
+#' @export
+drias_fetcher <- function(topography, year) {
+    cat("===== DRIAS FETCHER =====\n")
+    if (!year %in% c(2050, 2075, 2100)) {
+        stop("!! ERROR - 'year' must be equal either to 2050, 2075 or 2100.")
+    }
+
+    cat("Fetching the online database corresponding to the provided year of analysis can take up to 60s.\n")
+    cat("Please wait...\n")
+    drias_points <- tryCatch({
+        terra::vect(paste0("https://github.com/colinfabre/b2spm_database/raw/refs/heads/main/alpine_arc_", year, ".gpkg"))},
+        error = function(e) {stop(cat(paste0("!! ERROR -  Impossible to fetch the online database corresponding to the provided year. Please check your internet connection.\n")))})
+    cat("The online database was correctly fetched.\n")
+    terra::crs(drias_points) <- "EPSG:27572"
+    drias_points <- terra::project(drias_points, "EPSG:2154")
+
+    roi <- terra::vect(terra::ext(topography))
+    terra::crs(roi) <- "EPSG:2154"
+
+    drias_points_roi <- terra::crop(drias_points, roi)
+    drias_table <- as.data.frame(drias_points_roi)
+    drias_table <- cbind(drias_table[, 1], terra::geom(drias_points_roi)[, c("x", "y")], drias_table[, 2:10])
+    names(drias_table) <- c("id", "X93", "Y93", "date", "tmin", "tmax", "tmean", "tot_pr", "spec_hum", "vis_solrad", "ir_solrad", "wind")
+
+    stations <- unique(drias_table$id)
+    years <- unique(as.numeric(substr(drias_table$date, 7, 10)))
+    results <- list()
+
+    for (station in stations) {
+        station_data <- drias_table[drias_table$id == station, ]
+
+        for (year in years) {
+            
+            year_mask <- tryCatch({
+                as.numeric(substr(station_data$date, 7, 10)) == year},
+                error = function(e) {stop(cat(paste0("!! ERROR -  Impossible to extract and convert records dates for station ", station, ".\n")))})
+            doy_val <- seq_len(sum(year_mask))
+            station_data$doy[year_mask] <- doy_val
+        }
+
+        results[[as.character(station)]] <- station_data
+    }
+
+    drias_table <- do.call(rbind, results)
+    drias_table <- cbind(drias_table[, 1:4], drias_table[, "doy"], drias_table[, 5:12])
+    names(drias_table) <- c("id", "X93", "Y93", "date", "doy", "tmin", "tmax", "tmean", "tot_pr", "spec_hum", "vis_solrad", "ir_solrad", "wind")
+
+    drias_table$tmin <- drias_table$tmin - 273.15
+    drias_table$tmax <- drias_table$tmax - 273.15
+    drias_table$tmean <- drias_table$tmean - 273.15
+    drias_table$tot_pr <- drias_table$tot_pr * 86400
+
+    cat("== DRIAS FETCHER -- OK ==\n")
+    cat("=========================\n")
+    gc()
+    
     return(drias_table)
 }
 
@@ -145,7 +244,7 @@ drias_reader <- function(drias_txt_path, smoothing = FALSE) {
 #'
 #' This function uses a constrained non-linear radiative model calibrated for spruce to calculate the temperatures beneath the phloem regulating bark beetle development.
 #'
-#' @param drias_table The DRIAS table processed by the drias_reader() function.
+#' @param drias_table The DRIAS table processed either by the drias_reader() or the drias_fetcher() function.
 #' @return The updated DRIAS table with additional columns `tmin_phloem`, `tmax_phloem`, and `tmean_phloem` containing the temperatures beneath the phloem.
 #' @examples
 #' \dontrun{
@@ -172,15 +271,143 @@ phloem_rm <- function(drias_table) {
     drias_table$tmin_phloem <- pmin(drias_table$tmin + 2.5, drias_table$tmin_phloem)
     drias_table$tmax_phloem <- pmin(drias_table$tmax + 2.5, drias_table$tmax_phloem)
     drias_table$tmean_phloem <- pmin(drias_table$tmean + 2.5, drias_table$tmean_phloem)
-    
+
+    drias_table <- cbind(drias_table[, 1:5], drias_table[, "tmin"], drias_table[, "tmin_phloem"], drias_table[, "tmax"], drias_table[, "tmax_phloem"], drias_table[, "tmean"], drias_table[, "tmean_phloem"], drias_table[, 12:16])
+    names(drias_table) <- c("id", "X93", "Y93", "date", "doy", "tmin", "tmin_phloem", "tmax", "tmax_phloem", "tmean", "tmean_phloem", "tot_pr", "spec_hum", "vis_solrad", "ir_solrad", "wind")
+
     cat("== RADIATIVE MODEL FOR UNDER-PHLOEM TEMPERATURE CALCULATION -- OK ==\n")
     cat("====================================================================\n")
     gc()
 
-    drias_table <- cbind(drias_table[, 1:5], drias_table[, "tmin"], drias_table[, "tmin_phloem"], drias_table[, "tmax"], drias_table[, "tmax_phloem"], drias_table[, "tmean"], drias_table[, "tmean_phloem"], drias_table[, 12:16])
-    names(drias_table) <- c("id", "X93", "Y93", "date", "doy", "tmin", "tmin_phloem", "tmax", "tmax_phloem", "tmean", "tmean_phloem", "pr_tot", "spec_hum", "vis_solrad", "ir_solrad", "wind")
-
     return(drias_table)
+}
+
+#' ppc
+#'
+#' This function calculates the photoperiod (time of incident light between sunrise and sunset) according to the latitude, doy and surrounding topography for the cast shadows.
+#'
+#' @param drias_table The DRIAS table processed by the phloem_rm() function.
+#' @param topography The raster stack returned by the topo_comp() function.
+#' @return The updated DRIAS table with additional column `photoperiod` containing the duration of the photoperiod for each day.
+#' @examples
+#' \dontrun{
+#'  drias_table <- ppc(drias_table, topography)
+#' }
+#' @export
+ppc <- function(drias_table, topography) {
+    cat("===== PHOTOPERIOD COMPUTER =====\n")
+    stations <- unique(drias_table$id)
+
+    results <- lapply(stations, function(station) {
+        station_data <- drias_table[drias_table$id == station, ]
+        station_point <- terra::vect(station_data, geom = c("X93", "Y93"), crs = "EPSG:2154")
+        station_point_4326 <- terra::project(station_point, "EPSG:4326")
+
+        lat <- round(terra::crds(station_point_4326)[, 2], 5)
+        lat_rad <- lat * pi / 180
+
+        hours <- c(6, 9, 12, 15, 18)
+
+        for (doy in station_data$doy) {
+            mean_cshd <- terra::rast(topography$alt)
+            terra::values(mean_cshd) <- 0
+            
+            for (hour in hours) {
+                gamma <- 2 * pi / 365 * (doy - 1 + hour / 24)
+                delta <- 0.006918 - 0.399912 * cos(gamma) + 0.070257 * sin(gamma) - 0.006758 * cos(2 * gamma) + 0.000907 * sin(2 * gamma) - 0.002697 * cos(3 * gamma) + 0.00148 * sin(3 * gamma)
+
+                ah <- pi * (hour - 12) / 12
+
+                hs_angle <- pmax(asin(sin(lat_rad) * sin(delta) + cos(lat_rad) * cos(delta) * cos(ah)) * 180 / pi, 0)
+                mean_hs_angle <- mean(hs_angle)
+                
+                hs_azimuth <- atan2(-cos(delta) * sin(ah), sin(delta) * cos(lat_rad) - cos(delta) * sin(lat_rad) * cos(ah))
+                hs_azimuth <- (hs_azimuth * 180 / pi) %% 360
+                mean_hs_azimuth <- mean(hs_azimuth)
+
+                mean_cshd <- mean_cshd + terra::shade(topography$slope,, topography$aspect, angle = mean_hs_angle, direction = mean_hs_azimuth, normalize = TRUE)
+            }
+
+            mean_cshd <- round(mean_cshd / 5, 2)
+            station_cshd <- terra::extract(mean_cshd, station_point)[, 2]
+
+            gamma <- 2 * pi / 365 * (doy - 1 + 12 / 24)
+            delta <- 0.006918 - 0.399912 * cos(gamma) + 0.070257 * sin(gamma) - 0.006758 * cos(2 * gamma) + 0.000907 * sin(2 * gamma) - 0.002697 * cos(3 * gamma) + 0.00148 * sin(3 * gamma)
+            pp <- (24 / pi) * acos(-tan(lat) * tan(delta))
+
+            station_data[station_data$doy == doy, "pp_cshd"] <- round(pp * station_cshd, 1)
+        }
+
+        return(station_data)
+    })
+
+    cat("== PHOTOPERIOD COMPUTER -- OK ==\n")
+    cat("================================\n")
+    gc()
+
+    return(do.call(rbind, results))
+}
+
+#' hsc
+#'
+#' This function calculates the hydraulic stress of spruce forests according to the water balance P-ETP and the AWC_max (Available Water Content) map.
+#'
+#' @param drias_table The DRIAS table processed by the ppc() function.
+#' @param topography The raster stack returned by the topo_comp() function.
+#' @return The updated DRIAS table with additional column `hydro-stress` containing the water stress intensity index for each day.
+#' @examples
+#' \dontrun{
+#'  drias_table <- hsc(drias_table, topography)
+#' }
+#' @export
+hsc <- function(drias_table, topography) {
+    cat("===== HYDRAULIC STRESS COMPUTER =====\n")
+    awc_max <- terra::rast(system.file("extdata/awc_max.tif", package = "b2spm"))
+    terra::crs(awc_max) <- "EPSG:2154"
+
+    stations <- unique(drias_table$id)
+
+    results <- lapply(stations, function(station) {
+        station_data <- drias_table[drias_table$id == station, ]
+        station_point <- terra::vect(station_data, geom = c("X93", "Y93"), crs = "EPSG:2154")
+
+        station_awc_max <- terra::extract(awc_max, station_point)[, 2]
+        station_awc <- 0
+        station_data$awc <- 0
+        station_data[1, "awc"] <- 0
+        station_drought <- 0
+
+        for (doy in drias_table$doy) {
+            station_wb <- station_data$tot_pr - station_data$pet
+
+            if (station_wb > 0 && station_awc_max - station_awc > station_wb) {
+                station_awc <- station_awc + station_wb
+            }
+            if (station_wb > 0 && station_awc_max - station_awc < station_wb) {
+                station_awc <- station_awc_max
+            }
+            if (station_wb < 0 && station_awc - abs(station_wb) > 0) {
+                station_awc <- station_awc - abs(station_wb)
+            }
+            if (station_wb < 0 && station_awc < abs(station_wb)) {
+                station_awc <- 0
+            }
+
+            if (station_wb < 0 && station_data[doy, "awc"] < 0) {
+                station_drought <- station_drought + 1
+                ###
+                hsi <- (station_wb / station_awc_max) * 100 #### comment utiliser cet indicateur?
+            }
+        }
+
+        return(station_data)
+    })
+
+    cat("== HYDRAULIC STRESS COMPUTER -- OK ==\n")
+    cat("=====================================\n")
+    gc()
+
+    return(do.call(rbind, results))
 }
 
 #' awakening
@@ -188,7 +415,7 @@ phloem_rm <- function(drias_table) {
 #' This function calculates the awakening day (`awakening`) of adult bark beetles, weighted by the topographic modulator CSI_adj.
 #'
 #' @param drias_table The DRIAS table processed by the phloem_rm() function.
-#' @param topography The raster stack returned by the data_fetcher() function.
+#' @param topography The raster stack returned by the topo_comp() function.
 #' @return A data.frame with the columns: `id`, `X93`, `Y93`, `awakening_doy`, and `CSI_adj` (adjusted CSI index).
 #' @examples
 #' \dontrun{
@@ -208,9 +435,7 @@ awakening <- function(drias_table, topography) {
         window <- awakening_day - 30
         start_day <- max(1, window)
         station_data <- station_data[station_data$doy >= start_day & station_data$doy <= awakening_day, ]
-        station_point <- terra::vect(station_data, geom = c("X93", "Y93"), crs = "EPSG:27572")
-        terra::crs(station_point) <- "EPSG:27572"
-        station_point <- terra::project(station_point, terra::crs(topography))
+        station_point <- terra::vect(station_data, geom = c("X93", "Y93"), crs = "EPSG:2154")
         station_data$alt <- terra::extract(topography$alt, station_point)[, 2]
         station_data$aspect <- terra::extract(topography$aspect, station_point)[, 2]
 
@@ -221,7 +446,7 @@ awakening <- function(drias_table, topography) {
         csi_table$csi_adj <- pmax(round(csi_table$csi * cos(csi_table$aspect * pi / 180) * (1 - (csi_table$alt / 3500)), 2), 0)
         csi_table$csi_adj_log <- log1p(csi_table$csi_adj)
 
-        awakening_day <- ceiling(awakening_day * exp(0.2 * csi_table$csi_adj_log))
+        awakening_day <- ceiling(awakening_day * exp(0.05 * csi_table$csi_adj_log))
         if (awakening_day > 365) {
             awakening_day <- 0
             cat(paste0("<!> Warning - awakening() returned a 0-doy for the station ", station, ", meaning adult bark-beetles won't awake this year.\n"))
@@ -247,7 +472,7 @@ awakening <- function(drias_table, topography) {
 #'
 #' @param drias_table The DRIAS table processed by the phloem_rm() function.
 #' @param awakening_table The data.frame returned by the awakening() function.
-#' @param topography The raster stack returned by the data_fetcher() function.
+#' @param topography The raster stack returned by the topo_comp() function.
 #' @return A data.frame with the columns: `id`, `X93`, `Y93`, `awakening_doy`, and `swarming_doy`.
 #' @examples
 #' \dontrun{
@@ -263,7 +488,7 @@ swarming <- function(drias_table, awakening_table, topography) {
         station_data <- drias_table[drias_table$id == station, ]
         awakening_day <- awakening_table$awakening_doy[awakening_table$id == station]
 
-        swarming_day <- max(station_data$doy[station_data$doy > awakening_day & station_data$tmean >= 16.11 & station_data$tmax <= 31.29], awakening_day + 1)
+        swarming_day <- max(min(station_data$doy[station_data$doy > awakening_day & station_data$tmean >= 16.11 & station_data$tmax <= 31.29]), awakening_day + 1)
         if (awakening_day == 0) {
             swarming_day <- 0
             cat(paste0("<!> Warning - swarming() returned a 0-doy for station ", station, " meaning adult bark-beetles won't swarm this year.\n"))
@@ -294,7 +519,7 @@ swarming <- function(drias_table, awakening_table, topography) {
 #'
 #' @param drias_table The DRIAS table processed by the phloem_rm() function.
 #' @param swarming_table The data.frame returned by the swarming() function.
-#' @param topography The raster stack returned by the data_fetcher() function.
+#' @param topography The raster stack returned by the topo_comp() function.
 #' @return A data.frame with the columns: `id`, `X93`, `Y93`, `maturing_doy`, `CSI_adj` and `MDI`.
 #' @examples
 #' \dontrun{
@@ -318,9 +543,7 @@ maturing <- function(drias_table, swarming_table, topography) {
             window <- swarming_day - 30
             start_day <- max(1, window)
             topomod_data <- station_data[station_data$doy >= start_day & station_data$doy <= swarming_day, ]
-            station_point <- terra::vect(topomod_data, geom = c("X93", "Y93"), crs = "EPSG:27572")
-            terra::crs(station_point) <- "EPSG:27572"
-            station_point <- terra::project(station_point, terra::crs(topography))
+            station_point <- terra::vect(topomod_data, geom = c("X93", "Y93"), crs = "EPSG:2154")
             topomod_data$alt <- terra::extract(topography$alt, station_point)[, 2]
             topomod_data$aspect <- terra::extract(topography$aspect, station_point)[, 2]
 
@@ -331,8 +554,8 @@ maturing <- function(drias_table, swarming_table, topography) {
             csi_table$csi_adj <- pmax(round(csi_table$csi * cos(csi_table$aspect * pi / 180) * (1 - (csi_table$alt / 3500)), 2), 0)
             csi_table$csi_adj_log <- log1p(csi_table$csi_adj)
 
-            mdi_table <- stats::aggregate(cbind(pr_tot, tmean) ~ id, data = topomod_data, sum, na.rm = TRUE)
-            mdi_table$pr_t <- mdi_table$pr_tot / mdi_table$tmean
+            mdi_table <- stats::aggregate(cbind(tot_pr, tmean) ~ id, data = topomod_data, sum, na.rm = TRUE)
+            mdi_table$pr_t <- mdi_table$tot_pr / mdi_table$tmean
             topo_table <- stats::aggregate(cbind(alt, aspect) ~ id, data = topomod_data, stats::median, na.rm = TRUE)
             mdi_table <- merge(mdi_table, topo_table, by = "id")
             mdi_table$mdi <- pmax(round(mdi_table$pr_t * cos(mdi_table$aspect * pi / 180) * (1 - (mdi_table$alt / 3500)), 2), 0)
@@ -340,8 +563,7 @@ maturing <- function(drias_table, swarming_table, topography) {
 
             maturing_day <- ceiling(maturing_day * exp(0.005 * csi_table$csi_adj_log * mdi_table$mdi_log))
         } else {
-            station_point <- terra::vect(station_data, geom = c("X93", "Y93"), crs = "EPSG:27572")
-            terra::crs(station_point) <- "EPSG:27572"
+            station_point <- terra::vect(station_data, geom = c("X93", "Y93"), crs = "EPSG:2154")
             station_point <- terra::project(station_point, terra::crs(topography))
             station_data$alt <- terra::extract(topography$alt, station_point)[, 2]
             station_data$aspect <- terra::extract(topography$aspect, station_point)[, 2]
@@ -353,8 +575,8 @@ maturing <- function(drias_table, swarming_table, topography) {
             csi_table$csi_adj <- pmax(round(csi_table$csi * cos(csi_table$aspect * pi / 180) * (1 - (csi_table$alt / 3500)), 2), 0)
             csi_table$csi_adj_log <- log1p(csi_table$csi_adj)
 
-            mdi_table <- stats::aggregate(cbind(pr_tot, tmean) ~ id, data = station_data, sum, na.rm = TRUE)
-            mdi_table$pr_t <- mdi_table$pr_tot / mdi_table$tmean
+            mdi_table <- stats::aggregate(cbind(tot_pr, tmean) ~ id, data = station_data, sum, na.rm = TRUE)
+            mdi_table$pr_t <- mdi_table$tot_pr / mdi_table$tmean
             topo_table <- stats::aggregate(cbind(alt, aspect) ~ id, data = station_data, stats::median, na.rm = TRUE)
             mdi_table <- merge(mdi_table, topo_table, by = "id")
             mdi_table$mdi <- pmax(round(mdi_table$pr_t * cos(mdi_table$aspect * pi / 180) * (1 - (mdi_table$alt / 3500)), 2), 0)
@@ -391,7 +613,7 @@ maturing <- function(drias_table, swarming_table, topography) {
 #' @param awakening_table The data.frame returned by the awakening() function.
 #' @param swarming_table The data.frame returned by the swarming() function.
 #' @param maturing_table The data.frame returned by the maturing() function.
-#' @param topography The raster stack returned by the data_fetcher() function.
+#' @param topography The raster stack returned by the topo_comp() function.
 #' @return A raster stack containing the interpolated phenological indicators (`awakening_doy`, `swarming_doy`, `maturing_doy`), restricted to pure spruce forests.
 #' @examples
 #' \dontrun{
@@ -404,22 +626,21 @@ kpi <- function(awakening_table, swarming_table, maturing_table, topography) {
     pheno_data <- Reduce(function(x, y) merge(x, y, by = c("id", "X93", "Y93"), all = TRUE), list(awakening_table, swarming_table, maturing_table))
     pheno_data <- pheno_data[, c(1:4, 6:7)]
     pheno_data <- pheno_data["awakening_doy" != 0, ]
-    pheno_sf <- sf::st_as_sf(pheno_data, coords = c("X93", "Y93"), crs = 27572)
+    pheno_sf <- sf::st_as_sf(pheno_data, coords = c("X93", "Y93"), crs = 2154)
     vars <- c("awakening_doy", "swarming_doy", "maturing_doy")
 
-    grid <- topography$spruce_forests
-    terra::values(grid) <- NA
+    grid <- terra::rast(terra::ext(topography), crs = terra::crs(topography), resolution = 250)
     grid_df <- as.data.frame(grid, xy = TRUE, na.rm = FALSE)
-    grid_sf <- sf::st_as_sf(grid_df, coords = c("x", "y"), crs = 27572)
+    grid_sf <- sf::st_as_sf(grid_df, coords = c("x", "y"), crs = 2154)
     pheno_ind <- terra::rast()
 
-    if (length(pheno_data$id) < 150) {
+    if (length(pheno_data$id) < 50) {
         cat("<!> Warning - The number of DRIAS points is not enough to fit a semi-variogram and proceed to a kriging spatialization.\n")
         cat("<!> Warning - An IDW algorithm is used instead.\n")
         idw_spationer <- function(var) {
             formula <- stats::as.formula(paste(var, "~1"))
 
-            idw_result <- gstat::idw(formula = formula, locations = pheno_sf, newdata = grid_sf, idp = 1, nmax = 8, debug.level = -1)
+            idw_result <- gstat::idw(formula = formula, locations = pheno_sf, newdata = grid_sf, idp = 2, nmax = 8, debug.level = -1)
             idw_df <- cbind(sf::st_coordinates(idw_result), idw_result$var1.pred)
             colnames(idw_df) <- c("x", "y", var)
 
@@ -437,7 +658,7 @@ kpi <- function(awakening_table, swarming_table, maturing_table, topography) {
         pheno_ind <- do.call(c, idwed_vars)
     }
 
-    if (length(pheno_data$id) >= 150) {
+    if (length(pheno_data$id) >= 50) {
         cat("<!> Warning - The number of DRIAS points is enough to fit a semi-variogram and proceed to a kriging spatialization.\n")
         krig_spationer <- function(var) {
             formula <- stats::as.formula(paste(var, "~1"))
@@ -483,17 +704,12 @@ kpi <- function(awakening_table, swarming_table, maturing_table, topography) {
 rpc <- function(pheno_ind) {
     cat("===== Rpheno CALCULATION =====\n")
 
-    awakening_doy <- pheno_ind$awakening_doy
-    swarming_doy <- pheno_ind$swarming_doy
-    maturing_doy <- pheno_ind$maturing_doy
+    prob_awakening <- (-0.0028 * pheno_ind$awakening_doy) + 1.0282
+    prob_swarming <- (-0.0028 * pheno_ind$swarming_doy) + 1.0311
+    prob_maturing <- (-0.0032 * pheno_ind$maturing_doy) + 1.1699
 
-    norm_awakening <- 1 - (awakening_doy - 1) / 365
-    norm_swarming <- 1 - (swarming_doy - 1) / 365
-    norm_maturing <- 1 - (maturing_doy - 1) / 365
-
-    rpheno <- norm_awakening * norm_swarming * norm_maturing
-    rpheno[(awakening_doy == 0) | (swarming_doy == 0) | (maturing_doy == 0)] <- 0
-    rpheno[(awakening_doy == 365) | (swarming_doy == 365) | (maturing_doy == 365)] <- 0
+    rpheno <- round(prob_awakening * prob_swarming * prob_maturing, 2)
+    rpheno[rpheno < 0] <- 0
     names(rpheno) <- "Rpheno"
 
     cat("== Rpheno CALCULATION -- OK ==\n")
@@ -505,28 +721,21 @@ rpc <- function(pheno_ind) {
 
 #' pipeline
 #'
-#' Runs the entire B2SPM pipeline, from reading DRIAS data to spatializing the attack risk and number of attacks per year.
+#' Runs the entire B2SPM pipeline, from computing under-phloem temperatures to spatializing the attack risk.
 #'
-#' @param drias_txt_path Path to the DRIAS file containing daily meteorological data.
-#' @param dem A raster (preferably a SpatRaster in EPSG:2154) representing elevation, covering the entire study area plus a 5-pixel buffer.
+#' @param topography The raster stack returned by the topo_comp() function.
+#' @param drias_table The DRIAS table processed either by the drias_reader() or the drias_fetcher() function.
 #' @return A raster stack containing the spatialized phenological indicators (`awakening_doy`, `swarming_doy`, `maturing_doy`), the attack risk (`Rpheno`), and the maximum number of generations per year (`max_gen`).
 #' @examples
 #' \dontrun{
-#'  dem <- terra::rast("dem_roi.tif")
-#'  results <- pipeline("drias.txt", bbox)
+#'  results <- pipeline(topography, drias_table)
 #' }
 #' @export
-pipeline <- function(drias_txt_path, dem) {
+pipeline <- function(topography, drias_table) {
     cat("\n")
     cat("+--------------------------------------------------------------------------------------------------+\n")
     cat("|-------------------------------- B2SPM PIPELINE INITIALISATION... --------------------------------|\n")
     cat("+--------------------------------------------------------------------------------------------------+\n")
-    cat("\n")
-
-    topography <- topo_comp(dem)
-    cat("\n")
-
-    drias_table <- drias_reader(drias_txt_path)
     cat("\n")
 
     drias_table <- phloem_rm(drias_table)
@@ -550,9 +759,9 @@ pipeline <- function(drias_txt_path, dem) {
     cat("\n")
     cat("+--------------------------------------------------------------------------------------------------+\n")
     cat("|-------------------------------------- B2SPM PIPELINE -- OK --------------------------------------|\n")
-    cat("|##################################################################################################|\n")
     cat("+--------------------------------------------------------------------------------------------------+\n")
     cat("\n")
+    gc()
 
     return(results)
 }
