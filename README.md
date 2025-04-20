@@ -237,6 +237,14 @@ SAFRANYIK, L., CARROLL, A. L. *The biology and epidemiology of the mountain pine
 
 TRÂN, J. et al. *Impact of minimum winter temperatures on the population dynamics of Dendroctonus frontalis*, ESA, 2007. [CrossRef](https://doi.org/10.1890/06-0512)
 
+DELZON, S., COCHARD, H. *Recent advances in tree hydraulics highlight the ecological significance of the hydraulic safety margin*, New Phytologist, 2014. [CrossRef](https://doi.org/10.1111/nph.12798)
+
 FACCOLI, M. *Composition and elevation of spruce forests affect susceptibility to bark beetle attacks, implications for forest management*, Forests, 2014. [CrossRef](https://doi.org/10.3390/f5010088)
+
+ANDEREGG, W. et al. *Meta-analysis reveals that hydraulic traits explain cross-species patterns of drought-induced tree mortality across the globe*, PNAS, 2016. [CrossRef](https://doi.org/10.1073/pnas.1525678113)
+
+SPERRY, J. et al. *Predicting stomatal responses to the environment from the optimization of photosynthetic gain and hydraulic cost*, Plant, Cell & Environment, 2016. [CrossRef](https://doi.org/10.1111/pce.12852)
+
+CHOAT, B. et al. *Triggers of tree mortality under drought*, Nature, 2018. [CrossRef](https://doi.org/10.1038/s41586-018-0240-x)
 
 JAKOBY, O. et al. *Climate change alters elevational phenology patterns of the European spruce bark*, Global Change Biology, 2019. [CrossRef](https://doi.org/10.1111/gcb.14766)

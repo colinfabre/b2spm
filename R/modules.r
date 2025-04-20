@@ -88,12 +88,12 @@ topo_comp <- function(dem) {
 #'
 #' This function reads a text file containing climatic data from DRIAS and formats it into a dataframe compatible with the B2SPM pipeline.
 #'
-#' @param drias_txt_path The path to the text file containing DRIAS climatic data. The data must be comma-separated, the date must be in DD/MM/YYYY format, and it must include tmin (K), tmax (K), tmean (K), tot_pr (kg/m2/s), spec_hum (kg/kg), vis_solrad (W/m2), ir_solrad (W/m2), and wind (m/s).
+#' @param drias_txt_path The path to the text file containing DRIAS climatic data. The data must be comma-separated, the date must be in DD/MM/YYYY format, and it must include tmin (K), tmax (K), tmean (K), tot_pr (kg/m2/s), spec_hum (kg/kg), vis_solrad (W/m2), ir_solrad (W/m2), wind (m/s) and pet (kg/m2/s).
 #' @param smoothing Should the data be averaged around the central year (must provide an odd number of years). Simulated climate data are usually averaged with a 10-year range on either side of the central year to analyze.
-#' @return A data.frame containing the columns: `id`, `X93`, `Y93`, `date`, `doy`, `tmin`, `tmax`, `tmean`, `tot_pr`, `spec_hum`, `vis_solrad`, `ir_solrad`, `wind`.
+#' @return A data.frame containing the columns: `id`, `X93`, `Y93`, `date`, `doy`, `tmin`, `tmax`, `tmean`, `tot_pr`, `spec_hum`, `vis_solrad`, `ir_solrad`, `wind`, `pet`.
 #' @examples
 #' \dontrun{
-#'  drias_table <- drias_reader("chablais_2030.txt")
+#'  drias_table <- drias_reader("chablais_2050.txt")
 #' }
 #' @export
 drias_reader <- function(drias_txt_path, smoothing = FALSE) {
@@ -106,12 +106,13 @@ drias_reader <- function(drias_txt_path, smoothing = FALSE) {
     }
 
     drias_table <- utils::read.table(drias_txt_path, sep = ",", row.names = NULL)
-    names(drias_table) <- c("id", "X93", "Y93", "date", "tmin", "tmax", "tmean", "tot_pr", "spec_hum", "vis_solrad", "ir_solrad", "wind")
+    names(drias_table) <- c("id", "X_LambII", "Y_LambII", "date", "tmin", "tmax", "tmean", "tot_pr", "spec_hum", "vis_solrad", "ir_solrad", "wind", "pet")
 
-    drias_points <- terra::vect(drias_table, geom = c("X93", "Y93"), crs = "EPSG:27572")
+    drias_points <- terra::vect(drias_table, geom = c("X_LambII", "Y_LambII"), crs = "EPSG:27572")
     drias_points_2154 <- terra::project(drias_points, "EPSG:2154")
     coords_2154 <- terra::crds(drias_points_2154)
-    drias_table <- cbind(drias_table[, 1], coords_2154, drias_table[, 4:12])
+    drias_table <- cbind(drias_table[, 1], coords_2154, drias_table[, 4:13])
+    names(drias_table) <- c("id", "X93", "Y93", "date", "tmin", "tmax", "tmean", "tot_pr", "spec_hum", "vis_solrad", "ir_solrad", "wind", "pet")
 
     stations <- unique(drias_table$id)
     years <- unique(as.numeric(substr(drias_table$date, 7, 10)))
@@ -148,20 +149,21 @@ drias_reader <- function(drias_txt_path, smoothing = FALSE) {
             pack <- (length(years) - 1) / 2
             yta <- years[pack + 1]
 
-            mean_values <- stats::aggregate(temp[, 6:13], by = list(doy = temp$doy), FUN = mean)
+            mean_values <- stats::aggregate(temp[, 6:14], by = list(doy = temp$doy), FUN = mean)
             yta_mask <- as.numeric(substr(drias_table$date, 7, 10)) == yta
             doy_indices <- match(drias_table$doy[yta_mask], mean_values$doy)
-            drias_table[yta_mask, 6:13] <- mean_values[doy_indices, -1]
+            drias_table[yta_mask, 6:14] <- mean_values[doy_indices, -1]
         }
     } else {drias_table <- temp}
 
-    drias_table <- cbind(drias_table[, 1:4], drias_table[, "doy"], drias_table[, 5:12])
-    names(drias_table) <- c("id", "X93", "Y93", "date", "doy", "tmin", "tmax", "tmean", "tot_pr", "spec_hum", "vis_solrad", "ir_solrad", "wind")
+    drias_table <- cbind(drias_table[, 1:4], drias_table[, "doy"], drias_table[, 5:13])
+    names(drias_table) <- c("id", "X93", "Y93", "date", "doy", "tmin", "tmax", "tmean", "tot_pr", "spec_hum", "vis_solrad", "ir_solrad", "wind", "pet")
 
     drias_table$tmin <- drias_table$tmin - 273.15
     drias_table$tmax <- drias_table$tmax - 273.15
     drias_table$tmean <- drias_table$tmean - 273.15
     drias_table$tot_pr <- drias_table$tot_pr * 86400
+    drias_table$pet <- pmax(drias_table$pet * 86400, 0)
 
     cat("== DRIAS READER -- OK ==\n")
     cat("========================\n")
@@ -176,7 +178,7 @@ drias_reader <- function(drias_txt_path, smoothing = FALSE) {
 #'
 #' @param topography The raster stack returned by the topo_comp() function.
 #' @param year Year of analysis. Currently stored databases are 2050, 2075 and 2100, for the RCP8.5 scenario (cf. README).
-#' @return A data.frame containing the columns: `id`, `X93`, `Y93`, `date`, `doy`, `tmin`, `tmax`, `tmean`, `tot_pr`, `spec_hum`, `vis_solrad`, `ir_solrad`, `wind`.
+#' @return A data.frame containing the columns: `id`, `X93`, `Y93`, `date`, `doy`, `tmin`, `tmax`, `tmean`, `tot_pr`, `spec_hum`, `vis_solrad`, `ir_solrad`, `wind`, `pet`.
 #' @examples
 #' \dontrun{
 #'  drias_table <- drias_fetcher(topography, 2050)
@@ -202,8 +204,8 @@ drias_fetcher <- function(topography, year) {
 
     drias_points_roi <- terra::crop(drias_points, roi)
     drias_table <- as.data.frame(drias_points_roi)
-    drias_table <- cbind(drias_table[, 1], terra::geom(drias_points_roi)[, c("x", "y")], drias_table[, 2:10])
-    names(drias_table) <- c("id", "X93", "Y93", "date", "tmin", "tmax", "tmean", "tot_pr", "spec_hum", "vis_solrad", "ir_solrad", "wind")
+    drias_table <- cbind(drias_table[, 1], terra::geom(drias_points_roi)[, c("x", "y")], drias_table[, 2:11])
+    names(drias_table) <- c("id", "X93", "Y93", "date", "tmin", "tmax", "tmean", "tot_pr", "spec_hum", "vis_solrad", "ir_solrad", "wind", "pet")
 
     stations <- unique(drias_table$id)
     years <- unique(as.numeric(substr(drias_table$date, 7, 10)))
@@ -225,13 +227,14 @@ drias_fetcher <- function(topography, year) {
     }
 
     drias_table <- do.call(rbind, results)
-    drias_table <- cbind(drias_table[, 1:4], drias_table[, "doy"], drias_table[, 5:12])
-    names(drias_table) <- c("id", "X93", "Y93", "date", "doy", "tmin", "tmax", "tmean", "tot_pr", "spec_hum", "vis_solrad", "ir_solrad", "wind")
+    drias_table <- cbind(drias_table[, 1:4], drias_table[, "doy"], drias_table[, 5:13])
+    names(drias_table) <- c("id", "X93", "Y93", "date", "doy", "tmin", "tmax", "tmean", "tot_pr", "spec_hum", "vis_solrad", "ir_solrad", "wind", "pet")
 
     drias_table$tmin <- drias_table$tmin - 273.15
     drias_table$tmax <- drias_table$tmax - 273.15
     drias_table$tmean <- drias_table$tmean - 273.15
     drias_table$tot_pr <- drias_table$tot_pr * 86400
+    drias_table$pet <- pmax(drias_table$pet * 86400, 0)
 
     cat("== DRIAS FETCHER -- OK ==\n")
     cat("=========================\n")
@@ -272,14 +275,89 @@ phloem_rm <- function(drias_table) {
     drias_table$tmax_phloem <- pmin(drias_table$tmax + 2.5, drias_table$tmax_phloem)
     drias_table$tmean_phloem <- pmin(drias_table$tmean + 2.5, drias_table$tmean_phloem)
 
-    drias_table <- cbind(drias_table[, 1:5], drias_table[, "tmin"], drias_table[, "tmin_phloem"], drias_table[, "tmax"], drias_table[, "tmax_phloem"], drias_table[, "tmean"], drias_table[, "tmean_phloem"], drias_table[, 12:16])
-    names(drias_table) <- c("id", "X93", "Y93", "date", "doy", "tmin", "tmin_phloem", "tmax", "tmax_phloem", "tmean", "tmean_phloem", "tot_pr", "spec_hum", "vis_solrad", "ir_solrad", "wind")
+    drias_table <- cbind(drias_table[, 1:5], drias_table[, "tmin"], drias_table[, "tmin_phloem"], drias_table[, "tmax"], drias_table[, "tmax_phloem"], drias_table[, "tmean"], drias_table[, "tmean_phloem"], drias_table[, 9:14])
+    names(drias_table) <- c("id", "X93", "Y93", "date", "doy", "tmin", "tmin_phloem", "tmax", "tmax_phloem", "tmean", "tmean_phloem", "tot_pr", "spec_hum", "vis_solrad", "ir_solrad", "wind", "pet")
 
     cat("== RADIATIVE MODEL FOR UNDER-PHLOEM TEMPERATURE CALCULATION -- OK ==\n")
     cat("====================================================================\n")
     gc()
 
     return(drias_table)
+}
+
+#' hsc
+#'
+#' This function calculates the hydraulic stress index of spruce forests according to the water balance P-ETP and the AWC_max (Available Water Content) map (PIEDALLU, C. et al. Cartographie de la Réserve Utile Maximale en Eau des sols forestiers de France, UMR SILVAE, 2012).
+#'
+#' @param drias_table The DRIAS table processed by the ppc() function.
+#' @return A data.frame with the columns: `id`, `X93`, `Y93`, `his` (maximal hydraulic stress index throughout the year).
+#' @examples
+#' \dontrun{
+#'  drias_table <- hsc(drias_table)
+#' }
+#' @export
+hsc <- function(drias_table) {
+    cat("===== HYDRAULIC STRESS COMPUTER =====\n")
+    # awc_max <- terra::rast(system.file("extdata/awc_max.tif", package = "b2spm"))
+    terra::crs(awc_max) <- "EPSG:2154"
+
+    stations <- unique(drias_table$id)
+
+    results <- lapply(stations, function(station) {
+        station_data <- drias_table[drias_table$id == station, ]
+        station_point <- terra::vect(station_data, geom = c("X93", "Y93"), crs = "EPSG:2154")
+        station_point <- station_point[1]
+
+        station_awc_max <- terra::extract(awc_max, station_point)[, 2]
+        station_awc <- 0
+        station_stress <- 0
+        station_drought <- 0
+        station_data$awc <- NA
+        station_data$hsi <- NA
+
+        for (doy in station_data$doy) {
+            station_wb <- station_data$tot_pr[station_data$doy == doy] - station_data$pet[station_data$doy == doy]
+            if (station_wb >= 0) {
+                station_awc <- min(station_awc + station_wb, station_awc_max)
+            } else {
+                station_awc <- max(station_awc + station_wb, 0)
+            }
+
+            station_data[station_data$doy == doy, "awc"] <- station_awc
+
+            if (station_wb < 0 && station_awc == 0) {
+                station_stress <- station_stress + 1
+                station_drought <- station_drought + 1
+            } else {
+                station_drought <- 0
+            }
+
+            stress_curve <- function(x, ths, max) {
+                if (x <= ths) {
+                    return(1 + 0.5 * (x / ths))
+                } else {
+                    k <- -log(0.01) / (max - ths)
+                    return(1.5 + 0.5 * (1 - exp(-k * (x - ths))))
+                }
+            }
+            hsi <- max(stress_curve(station_stress, ths = 10, max = 21), stress_curve(station_drought, ths = 5, max = 10))
+
+            station_data[station_data$doy == doy, "hsi"] <- hsi
+        }
+
+        return(station_data)
+    })
+
+    temp <- do.call(rbind, results)
+    hsi_table <- aggregate(hsi ~ id + X93 + Y93, data = temp, FUN = max, na.rm = TRUE)
+    hsi_table$hsi <- round(hsi_table$hsi, 2)
+    names(hsi_table) <- c("id", "X93", "Y93", "hsi")
+
+    cat("== HYDRAULIC STRESS COMPUTER -- OK ==\n")
+    cat("=====================================\n")
+    gc()
+
+    return(hsi_table)
 }
 
 #' ppc
@@ -346,76 +424,6 @@ ppc <- function(drias_table, topography) {
     gc()
 
     return(do.call(rbind, results))
-}
-
-#' hsc
-#'
-#' This function calculates the hydraulic stress index of spruce forests according to the water balance P-ETP and the AWC_max (Available Water Content) map.
-#'
-#' @param drias_table The DRIAS table processed by the ppc() function.
-#' @param topography The raster stack returned by the topo_comp() function.
-#' @return The updated DRIAS table with additional column `hsi` containing the water stress intensity index for each day.
-#' @examples
-#' \dontrun{
-#'  drias_table <- hsc(drias_table, topography)
-#' }
-#' @export
-hsc <- function(drias_table, topography) {
-    cat("===== HYDRAULIC STRESS COMPUTER =====\n")
-    awc_max <- terra::rast(system.file("extdata/awc_max.tif", package = "b2spm"))
-    terra::crs(awc_max) <- "EPSG:2154"
-
-    stations <- unique(drias_table$id)
-
-    results <- lapply(stations, function(station) {
-        station_data <- drias_table[drias_table$id == station, ]
-        station_point <- terra::vect(station_data, geom = c("X93", "Y93"), crs = "EPSG:2154")
-
-        station_awc_max <- terra::extract(awc_max, station_point)[, 2]
-        station_awc <- 0
-        station_stress <- 0
-        station_drought <- 0
-        station_data$awc <- NA
-        station_data$hsi <- NA
-
-        for (doy in station_data$doy) {
-            station_wb <- station_data$tot_pr[station_data$doy == doy] - station_data$pet[station_data$doy == doy]
-            if (station_wb >= 0) {
-                station_awc <- min(station_awc + station_wb, station_awc_max)
-            } else {
-                station_awc <- max(station_awc + station_wb, 0)
-            }
-
-            station_data[station_data$doy == doy, "awc"] <- station_awc
-
-            if (station_wb < 0 && station_awc == 0) {
-                station_stress <- station_stress + 1
-                station_drought <- station_drought + 1
-            } else {
-                station_drought <- 0
-            }
-
-            stress_curve <- function(x, ths, max) {
-                if (x <= ths) {
-                    return(1 + 0.5 * (x / ths))
-                } else {
-                    k <- -log(0.01) / (max - ths)
-                    return(1.5 + 0.5 * (1 - exp(-k * (x - ths))))
-                }
-            }
-            hsi <- max(stress_curve(station_stress, ths = 10, max = 21), stress_curve(station_drought, ths = 5, max = 10))
-
-            station_data[station_data$doy == doy, "hsi"] <- hsi
-        }
-
-        return(station_data)
-    })
-
-    cat("== HYDRAULIC STRESS COMPUTER -- OK ==\n")
-    cat("=====================================\n")
-    gc()
-
-    return(do.call(rbind, results)) ##### transformer en hsi_table pour y passer en entrée de kpi()
 }
 
 #' awakening
