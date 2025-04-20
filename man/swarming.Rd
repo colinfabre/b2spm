@@ -11,7 +11,7 @@ swarming(drias_table, awakening_table, topography)
 
 \item{awakening_table}{The data.frame returned by the awakening() function.}
 
-\item{topography}{The raster stack returned by the data_fetcher() function.}
+\item{topography}{The raster stack returned by the topo_comp() function.}
 }
 \value{
 A data.frame with the columns: `id`, `X93`, `Y93`, `awakening_doy`, and `swarming_doy`.

@@ -7,7 +7,7 @@
 drias_fetcher(topography, year)
 }
 \arguments{
-\item{topography}{The raster stack returned by the data_fetcher() function.}
+\item{topography}{The raster stack returned by the topo_comp() function.}
 
 \item{year}{Year of analysis. Currently stored databases are 2050, 2075 and 2100, for the RCP8.5 scenario (cf. README).}
 }

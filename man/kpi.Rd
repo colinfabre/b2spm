@@ -13,7 +13,7 @@ kpi(awakening_table, swarming_table, maturing_table, topography)
 
 \item{maturing_table}{The data.frame returned by the maturing() function.}
 
-\item{topography}{The raster stack returned by the data_fetcher() function.}
+\item{topography}{The raster stack returned by the topo_comp() function.}
 }
 \value{
 A raster stack containing the interpolated phenological indicators (`awakening_doy`, `swarming_doy`, `maturing_doy`), restricted to pure spruce forests.

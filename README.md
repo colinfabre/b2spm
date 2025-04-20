@@ -14,7 +14,8 @@
   - [Internal Functionality](#internal-functionality)
   - [External Data](#external-data)
 - [Main Functions](#main-functions)
-  - [Radiative Model](#radiative-model-for-sub-phloem-temperature)
+  - [Radiative Model for Sub-Phloem Temperatures](#radiative-model-for-sub-phloem-temperature)
+  - [Calculation of the Photoperiod Moderated by Cast Shadows](#calculation-of-the-photoperiod-moderated-by-cast-shadows)
 - [Usage Example](#usage-example)
 - [References](#references)
 
@@ -195,10 +196,16 @@ $$0 \leq T_{phloem} - T_{ext} \leq 2.5^\circ C$$
 library(b2spm)
 dem_chablais <- rast("mnt_chablais.tif")
 
-# Run the model for the Chablais in 2030
-results_chablais <- pipeline("drias_chablais_2030", dem_chablais)
+# Computes the topography
+topo_chablais <- topo_comp(dem_chablais)
 
-# Display the epidemic risk map
+# Fetches the  DRIAS table on the ROI for 2050
+drias_chablais_2050 <- drias_fetcher(topography, year = 2050)
+
+# Runs the model for the Chablais in 2030
+results_chablais <- pipeline(drias_table = drias_chablais_2050, topography = topo_chablais)
+
+# Displays the epidemic risk map
 plot(results_chablais$rpheno, main = "Epidemic Risk Map")
 ```
 

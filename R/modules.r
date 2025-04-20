@@ -350,11 +350,11 @@ ppc <- function(drias_table, topography) {
 
 #' hsc
 #'
-#' This function calculates the hydraulic stress of spruce forests according to the water balance P-ETP and the AWC_max (Available Water Content) map.
+#' This function calculates the hydraulic stress index of spruce forests according to the water balance P-ETP and the AWC_max (Available Water Content) map.
 #'
 #' @param drias_table The DRIAS table processed by the ppc() function.
 #' @param topography The raster stack returned by the topo_comp() function.
-#' @return The updated DRIAS table with additional column `hydro-stress` containing the water stress intensity index for each day.
+#' @return The updated DRIAS table with additional column `hsi` containing the water stress intensity index for each day.
 #' @examples
 #' \dontrun{
 #'  drias_table <- hsc(drias_table, topography)
@@ -373,31 +373,39 @@ hsc <- function(drias_table, topography) {
 
         station_awc_max <- terra::extract(awc_max, station_point)[, 2]
         station_awc <- 0
-        station_data$awc <- 0
-        station_data[1, "awc"] <- 0
+        station_stress <- 0
         station_drought <- 0
+        station_data$awc <- NA
+        station_data$hsi <- NA
 
-        for (doy in drias_table$doy) {
-            station_wb <- station_data$tot_pr - station_data$pet
-
-            if (station_wb > 0 && station_awc_max - station_awc > station_wb) {
-                station_awc <- station_awc + station_wb
-            }
-            if (station_wb > 0 && station_awc_max - station_awc < station_wb) {
-                station_awc <- station_awc_max
-            }
-            if (station_wb < 0 && station_awc - abs(station_wb) > 0) {
-                station_awc <- station_awc - abs(station_wb)
-            }
-            if (station_wb < 0 && station_awc < abs(station_wb)) {
-                station_awc <- 0
+        for (doy in station_data$doy) {
+            station_wb <- station_data$tot_pr[station_data$doy == doy] - station_data$pet[station_data$doy == doy]
+            if (station_wb >= 0) {
+                station_awc <- min(station_awc + station_wb, station_awc_max)
+            } else {
+                station_awc <- max(station_awc + station_wb, 0)
             }
 
-            if (station_wb < 0 && station_data[doy, "awc"] < 0) {
+            station_data[station_data$doy == doy, "awc"] <- station_awc
+
+            if (station_wb < 0 && station_awc == 0) {
+                station_stress <- station_stress + 1
                 station_drought <- station_drought + 1
-                ###
-                hsi <- (station_wb / station_awc_max) * 100 #### comment utiliser cet indicateur?
+            } else {
+                station_drought <- 0
             }
+
+            stress_curve <- function(x, ths, max) {
+                if (x <= ths) {
+                    return(1 + 0.5 * (x / ths))
+                } else {
+                    k <- -log(0.01) / (max - ths)
+                    return(1.5 + 0.5 * (1 - exp(-k * (x - ths))))
+                }
+            }
+            hsi <- max(stress_curve(station_stress, ths = 10, max = 21), stress_curve(station_drought, ths = 5, max = 10))
+
+            station_data[station_data$doy == doy, "hsi"] <- hsi
         }
 
         return(station_data)
@@ -407,7 +415,7 @@ hsc <- function(drias_table, topography) {
     cat("=====================================\n")
     gc()
 
-    return(do.call(rbind, results))
+    return(do.call(rbind, results)) ##### transformer en hsi_table pour y passer en entrée de kpi()
 }
 
 #' awakening
