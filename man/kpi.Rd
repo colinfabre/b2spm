@@ -4,7 +4,7 @@
 \alias{kpi}
 \title{kpi}
 \usage{
-kpi(awakening_table, swarming_table, maturing_table, topography)
+kpi(awakening_table, swarming_table, maturing_table, hsi_table, topography)
 }
 \arguments{
 \item{awakening_table}{The data.frame returned by the awakening() function.}
@@ -13,16 +13,18 @@ kpi(awakening_table, swarming_table, maturing_table, topography)
 
 \item{maturing_table}{The data.frame returned by the maturing() function.}
 
+\item{hsi_table}{The data.frame returned by the hsc() function.}
+
 \item{topography}{The raster stack returned by the topo_comp() function.}
 }
 \value{
-A raster stack containing the interpolated phenological indicators (`awakening_doy`, `swarming_doy`, `maturing_doy`), restricted to pure spruce forests.
+A raster stack containing the interpolated phenological indicators and hydraulic stress index, restricted to pure spruce forests.
 }
 \description{
-This function spatializes phenological indicators (`awakening_doy`, `swarming_doy`, `maturing_doy`) using IDW or ordinary kriging with an exponential model, depending on the number of DRIAS points present in the study area.
+This function spatializes phenological indicators (`awakening_doy`, `swarming_doy`, `maturing_doy`) and hydraulic stress index (`hsi`) using IDW or ordinary kriging with an auto-fitted exponential model, depending on the number of DRIAS points present in the study area.
 }
 \examples{
 \dontrun{
- pheno_ind <- kpi(awakening_table, swarming_table, maturing_table, topography)
+ spat_ind <- kpi(awakening_table, swarming_table, maturing_table, hsi_table, topography)
 }
 }

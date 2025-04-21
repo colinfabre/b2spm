@@ -305,7 +305,7 @@ hsc <- function(drias_table) {
 
     results <- lapply(stations, function(station) {
         station_data <- drias_table[drias_table$id == station, ]
-        station_point <- terra::vect(station_data, geom = c("X93", "Y93"), crs = "EPSG:2154")
+        station_point <- terra::vect(station_data, geom = c("X93", "Y93"), crs = "EPSG:2154")[1]
         station_point <- station_point[1]
 
         station_awc_max <- terra::extract(awc_max, station_point)[, 2]
@@ -378,17 +378,17 @@ ppc <- function(drias_table, topography) {
 
     results <- lapply(stations, function(station) {
         station_data <- drias_table[drias_table$id == station, ]
-        station_point <- terra::vect(station_data, geom = c("X93", "Y93"), crs = "EPSG:2154")
+        station_point <- terra::vect(station_data, geom = c("X93", "Y93"), crs = "EPSG:2154")[1]
         station_point_4326 <- terra::project(station_point, "EPSG:4326")
 
-        lat <- round(terra::crds(station_point_4326)[, 2], 5)
+        lat <- round(terra::crds(station_point_4326)[2], 5)
         lat_rad <- lat * pi / 180
 
         hours <- c(6, 9, 12, 15, 18)
 
         for (doy in station_data$doy) {
-            mean_cshd <- terra::rast(topography$alt)
-            terra::values(mean_cshd) <- 0
+            cum_cshd <- terra::rast(topography$alt)
+            terra::values(cum_cshd) <- 0
             
             for (hour in hours) {
                 gamma <- 2 * pi / 365 * (doy - 1 + hour / 24)
@@ -397,21 +397,20 @@ ppc <- function(drias_table, topography) {
                 ah <- pi * (hour - 12) / 12
 
                 hs_angle <- pmax(asin(sin(lat_rad) * sin(delta) + cos(lat_rad) * cos(delta) * cos(ah)) * 180 / pi, 0)
-                mean_hs_angle <- mean(hs_angle)
                 
                 hs_azimuth <- atan2(-cos(delta) * sin(ah), sin(delta) * cos(lat_rad) - cos(delta) * sin(lat_rad) * cos(ah))
                 hs_azimuth <- (hs_azimuth * 180 / pi) %% 360
-                mean_hs_azimuth <- mean(hs_azimuth)
-
-                mean_cshd <- mean_cshd + terra::shade(topography$slope,, topography$aspect, angle = mean_hs_angle, direction = mean_hs_azimuth, normalize = TRUE)
+                
+                terra::values(cum_cshd) <- terra::values(cum_cshd) + terra::values(terra::shade(slope = topography$slope, aspect = topography$aspect, angle = hs_angle, direction = hs_azimuth))
+                cum_cshd <- terra::clamp(cum_cshd, lower = 0, values = TRUE)
             }
 
-            mean_cshd <- round(mean_cshd / 5, 2)
+            mean_cshd <- round(cum_cshd / 5, 2)
             station_cshd <- terra::extract(mean_cshd, station_point)[, 2]
 
             gamma <- 2 * pi / 365 * (doy - 1 + 12 / 24)
             delta <- 0.006918 - 0.399912 * cos(gamma) + 0.070257 * sin(gamma) - 0.006758 * cos(2 * gamma) + 0.000907 * sin(2 * gamma) - 0.002697 * cos(3 * gamma) + 0.00148 * sin(3 * gamma)
-            pp <- (24 / pi) * acos(-tan(lat) * tan(delta))
+            pp <- (24 / pi) * acos(-tan(lat_rad) * tan(delta))
 
             station_data[station_data$doy == doy, "pp_cshd"] <- round(pp * station_cshd, 1)
         }
@@ -451,7 +450,7 @@ awakening <- function(drias_table, topography) {
         window <- awakening_day - 30
         start_day <- max(1, window)
         station_data <- station_data[station_data$doy >= start_day & station_data$doy <= awakening_day, ]
-        station_point <- terra::vect(station_data, geom = c("X93", "Y93"), crs = "EPSG:2154")
+        station_point <- terra::vect(station_data, geom = c("X93", "Y93"), crs = "EPSG:2154")[1]
         station_data$alt <- terra::extract(topography$alt, station_point)[, 2]
         station_data$aspect <- terra::extract(topography$aspect, station_point)[, 2]
 
@@ -559,7 +558,7 @@ maturing <- function(drias_table, swarming_table, topography) {
             window <- swarming_day - 30
             start_day <- max(1, window)
             topomod_data <- station_data[station_data$doy >= start_day & station_data$doy <= swarming_day, ]
-            station_point <- terra::vect(topomod_data, geom = c("X93", "Y93"), crs = "EPSG:2154")
+            station_point <- terra::vect(topomod_data, geom = c("X93", "Y93"), crs = "EPSG:2154")[1]
             topomod_data$alt <- terra::extract(topography$alt, station_point)[, 2]
             topomod_data$aspect <- terra::extract(topography$aspect, station_point)[, 2]
 
@@ -579,7 +578,7 @@ maturing <- function(drias_table, swarming_table, topography) {
 
             maturing_day <- ceiling(maturing_day * exp(0.005 * csi_table$csi_adj_log * mdi_table$mdi_log))
         } else {
-            station_point <- terra::vect(station_data, geom = c("X93", "Y93"), crs = "EPSG:2154")
+            station_point <- terra::vect(station_data, geom = c("X93", "Y93"), crs = "EPSG:2154")[1]
             station_point <- terra::project(station_point, terra::crs(topography))
             station_data$alt <- terra::extract(topography$alt, station_point)[, 2]
             station_data$aspect <- terra::extract(topography$aspect, station_point)[, 2]
@@ -624,39 +623,40 @@ maturing <- function(drias_table, swarming_table, topography) {
 
 #' kpi
 #'
-#' This function spatializes phenological indicators (`awakening_doy`, `swarming_doy`, `maturing_doy`) using IDW or ordinary kriging with an exponential model, depending on the number of DRIAS points present in the study area.
+#' This function spatializes phenological indicators (`awakening_doy`, `swarming_doy`, `maturing_doy`) and hydraulic stress index (`hsi`) using IDW or ordinary kriging with an auto-fitted exponential model, depending on the number of DRIAS points present in the study area.
 #'
 #' @param awakening_table The data.frame returned by the awakening() function.
 #' @param swarming_table The data.frame returned by the swarming() function.
 #' @param maturing_table The data.frame returned by the maturing() function.
+#' @param hsi_table The data.frame returned by the hsc() function.
 #' @param topography The raster stack returned by the topo_comp() function.
-#' @return A raster stack containing the interpolated phenological indicators (`awakening_doy`, `swarming_doy`, `maturing_doy`), restricted to pure spruce forests.
+#' @return A raster stack containing the interpolated phenological indicators and hydraulic stress index, restricted to pure spruce forests.
 #' @examples
 #' \dontrun{
-#'  pheno_ind <- kpi(awakening_table, swarming_table, maturing_table, topography)
+#'  spat_ind <- kpi(awakening_table, swarming_table, maturing_table, hsi_table, topography)
 #' }
 #' @export
-kpi <- function(awakening_table, swarming_table, maturing_table, topography) {
-    cat("===== PHENOLOGICAL INDICATORS SPATIALISATION =====\n")
+kpi <- function(awakening_table, swarming_table, maturing_table, hsi_table, topography) {
+    cat("===== INDICATORS SPATIALISATION =====\n")
 
-    pheno_data <- Reduce(function(x, y) merge(x, y, by = c("id", "X93", "Y93"), all = TRUE), list(awakening_table, swarming_table, maturing_table))
-    pheno_data <- pheno_data[, c(1:4, 6:7)]
-    pheno_data <- pheno_data["awakening_doy" != 0, ]
-    pheno_sf <- sf::st_as_sf(pheno_data, coords = c("X93", "Y93"), crs = 2154)
-    vars <- c("awakening_doy", "swarming_doy", "maturing_doy")
+    data <- Reduce(function(x, y) merge(x, y, by = c("id", "X93", "Y93"), all = TRUE), list(awakening_table, swarming_table, maturing_table, hsi_table))
+    data <- data[, c(1:4, 6:8)]
+    data <- data["awakening_doy" != 0, ]
+    data_sf <- sf::st_as_sf(data, coords = c("X93", "Y93"), crs = 2154)
+    vars <- c("awakening_doy", "swarming_doy", "maturing_doy", "hsi")
 
     grid <- terra::rast(terra::ext(topography), crs = terra::crs(topography), resolution = 250)
     grid_df <- as.data.frame(grid, xy = TRUE, na.rm = FALSE)
     grid_sf <- sf::st_as_sf(grid_df, coords = c("x", "y"), crs = 2154)
-    pheno_ind <- terra::rast()
+    spat_ind <- terra::rast()
 
-    if (length(pheno_data$id) < 50) {
+    if (length(data$id) < 50) {
         cat("<!> Warning - The number of DRIAS points is not enough to fit a semi-variogram and proceed to a kriging spatialization.\n")
         cat("<!> Warning - An IDW algorithm is used instead.\n")
         idw_spationer <- function(var) {
             formula <- stats::as.formula(paste(var, "~1"))
 
-            idw_result <- gstat::idw(formula = formula, locations = pheno_sf, newdata = grid_sf, idp = 2, nmax = 8, debug.level = -1)
+            idw_result <- gstat::idw(formula = formula, locations = data_sf, newdata = grid_sf, idp = 2, nmax = 8, debug.level = -1)
             idw_df <- cbind(sf::st_coordinates(idw_result), idw_result$var1.pred)
             colnames(idw_df) <- c("x", "y", var)
 
@@ -671,17 +671,17 @@ kpi <- function(awakening_table, swarming_table, maturing_table, topography) {
         }
 
         idwed_vars <- lapply(vars, idw_spationer)
-        pheno_ind <- do.call(c, idwed_vars)
+        spat_ind <- do.call(c, idwed_vars)
     }
 
-    if (length(pheno_data$id) >= 50) {
+    if (length(data$id) >= 50) {
         cat("<!> Warning - The number of DRIAS points is enough to fit a semi-variogram and proceed to a kriging spatialization.\n")
         krig_spationer <- function(var) {
             formula <- stats::as.formula(paste(var, "~1"))
-            vgm_model <- gstat::variogram(formula, data = pheno_sf)
+            vgm_model <- gstat::variogram(formula, data = data_sf)
             vgm_fit <- gstat::fit.variogram(vgm_model, gstat::vgm("Exp", range = 500, nugget = NA, psill = NA), debug.level = -1)
 
-            krig_result <- gstat::krige(formula = formula, locations = pheno_sf, newdata = grid_sf, model = vgm_fit, nmax = 8, debug.level = -1)
+            krig_result <- gstat::krige(formula = formula, locations = data_sf, newdata = grid_sf, model = vgm_fit, nmax = 8, debug.level = -1)
             krig_df <- cbind(sf::st_coordinates(krig_result), krig_result$var1.pred)
             colnames(krig_df) <- c("x", "y", var)
 
@@ -696,35 +696,36 @@ kpi <- function(awakening_table, swarming_table, maturing_table, topography) {
         }
 
         kriged_vars <- lapply(vars, krig_spationer)
-        pheno_ind <- do.call(c, kriged_vars)
+        spat_ind <- do.call(c, kriged_vars)
     }
 
-    cat("== PHENOLOGICAL INDICATORS SPATIALISATION -- OK ==\n")
+    cat("== INDICATORS SPATIALISATION -- OK ==\n")
     cat("==================================================\n")
     gc()
 
-    return(pheno_ind)
+    return(spat_ind)
 }
 
 #' rpc
 #'
-#' This function calculates the global epidemic risk indicator (`Rpheno`), measuring the probability of successful development of a bark beetle generation based on the indicators `awakening_doy`, `swarming_doy`, and `maturing_doy`, and thus the risk of attack.
+#' This function calculates the global epidemic risk indicator (`Rpheno`), measuring the probability of successful development of a bark beetle generation based on the indicators `awakening_doy`, `swarming_doy`, and `maturing_doy`, and the hydraulic stress endured by spruce trees throughout the year.
 #'
-#' @param pheno_ind The raster stack returned by the kpi() function.
-#' @return A probability raster (`Rpheno`), ranging from 0 to 1, indicating the global epidemic risk of bark beetle generation development and thus the risk of attack.
+#' @param spat_ind The raster stack returned by the kpi() function.
+#' @return A probability raster (`Rpheno`), ranging from 0 to 1, indicating the global epidemic risk of bark beetle generation development and attack on water-stress spruce forests.
 #' @examples
 #' \dontrun{
-#'  rpheno <- rpc(pheno_ind)
+#'  rpheno <- rpc(spat_ind)
 #' }
 #' @export
-rpc <- function(pheno_ind) {
+rpc <- function(spat_ind) {
     cat("===== Rpheno CALCULATION =====\n")
 
-    prob_awakening <- (-0.0028 * pheno_ind$awakening_doy) + 1.0282
-    prob_swarming <- (-0.0028 * pheno_ind$swarming_doy) + 1.0311
-    prob_maturing <- (-0.0032 * pheno_ind$maturing_doy) + 1.1699
+    prob_awakening <- (-0.0028 * spat_ind$awakening_doy) + 1.0282
+    prob_swarming <- (-0.0028 * spat_ind$swarming_doy) + 1.0311
+    prob_maturing <- (-0.0032 * spat_ind$maturing_doy) + 1.1699
+    prob_hsi <- spat_ind$hsi
 
-    rpheno <- round(prob_awakening * prob_swarming * prob_maturing, 2)
+    rpheno <- pmax(round(prob_awakening * prob_swarming * prob_maturing * prob_hsi, 2), 1)
     rpheno[rpheno < 0] <- 0
     names(rpheno) <- "Rpheno"
 
@@ -764,13 +765,13 @@ pipeline <- function(topography, drias_table) {
     maturing_table <- maturing(drias_table, swarming_table, topography)
     cat("\n")
 
-    pheno_ind <- kpi(awakening_table, swarming_table, maturing_table, topography)
+    spat_ind <- kpi(awakening_table, swarming_table, maturing_table, topography)
     cat("\n")
 
-    rpheno <- rpc(pheno_ind)
+    rpheno <- rpc(spat_ind)
     cat("\n")
 
-    results <- c(pheno_ind, rpheno)
+    results <- c(spat_ind, rpheno)
 
     cat("\n")
     cat("+--------------------------------------------------------------------------------------------------+\n")

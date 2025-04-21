@@ -4,21 +4,19 @@
 \alias{hsc}
 \title{hsc}
 \usage{
-hsc(drias_table, topography)
+hsc(drias_table)
 }
 \arguments{
 \item{drias_table}{The DRIAS table processed by the ppc() function.}
-
-\item{topography}{The raster stack returned by the topo_comp() function.}
 }
 \value{
-The updated DRIAS table with additional column `hsi` containing the water stress intensity index for each day.
+A data.frame with the columns: `id`, `X93`, `Y93`, `his` (maximal hydraulic stress index throughout the year).
 }
 \description{
-This function calculates the hydraulic stress index of spruce forests according to the water balance P-ETP and the AWC_max (Available Water Content) map.
+This function calculates the hydraulic stress index of spruce forests according to the water balance P-ETP and the AWC_max (Available Water Content) map (PIEDALLU, C. et al. Cartographie de la Réserve Utile Maximale en Eau des sols forestiers de France, UMR SILVAE, 2012).
 }
 \examples{
 \dontrun{
- drias_table <- hsc(drias_table, topography)
+ drias_table <- hsc(drias_table)
 }
 }

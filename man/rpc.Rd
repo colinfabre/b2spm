@@ -4,19 +4,19 @@
 \alias{rpc}
 \title{rpc}
 \usage{
-rpc(pheno_ind)
+rpc(spat_ind)
 }
 \arguments{
-\item{pheno_ind}{The raster stack returned by the kpi() function.}
+\item{spat_ind}{The raster stack returned by the kpi() function.}
 }
 \value{
-A probability raster (`Rpheno`), ranging from 0 to 1, indicating the global epidemic risk of bark beetle generation development and thus the risk of attack.
+A probability raster (`Rpheno`), ranging from 0 to 1, indicating the global epidemic risk of bark beetle generation development and attack on water-stress spruce forests.
 }
 \description{
-This function calculates the global epidemic risk indicator (`Rpheno`), measuring the probability of successful development of a bark beetle generation based on the indicators `awakening_doy`, `swarming_doy`, and `maturing_doy`, and thus the risk of attack.
+This function calculates the global epidemic risk indicator (`Rpheno`), measuring the probability of successful development of a bark beetle generation based on the indicators `awakening_doy`, `swarming_doy`, and `maturing_doy`, and the hydraulic stress endured by spruce trees throughout the year.
 }
 \examples{
 \dontrun{
- rpheno <- rpc(pheno_ind)
+ rpheno <- rpc(spat_ind)
 }
 }

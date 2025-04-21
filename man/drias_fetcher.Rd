@@ -12,7 +12,7 @@ drias_fetcher(topography, year)
 \item{year}{Year of analysis. Currently stored databases are 2050, 2075 and 2100, for the RCP8.5 scenario (cf. README).}
 }
 \value{
-A data.frame containing the columns: `id`, `X93`, `Y93`, `date`, `doy`, `tmin`, `tmax`, `tmean`, `tot_pr`, `spec_hum`, `vis_solrad`, `ir_solrad`, `wind`.
+A data.frame containing the columns: `id`, `X93`, `Y93`, `date`, `doy`, `tmin`, `tmax`, `tmean`, `tot_pr`, `spec_hum`, `vis_solrad`, `ir_solrad`, `wind`, `pet`.
 }
 \description{
 This function fetches the DRIAS database corresponding to the provided DEM and year, and formats it into a dataframe compatible with the B2SPM pipeline.
