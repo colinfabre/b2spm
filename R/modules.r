@@ -2,7 +2,7 @@
 #'
 #' This function loads the spruce forest mask and computes topographic data for the study area using the provided DEM.
 #'
-#' @param dem A raster (preferably a SpatRaster in EPSG:2154) representing elevation, covering the entire study area plus a 5-pixel buffer, at a 25m-pixel spatial resolution. It has to be located within the French alpine arc (see README.md for further information).
+#' @param dem A raster (preferably a SpatRaster in EPSG:2154) representing elevation, covering the entire study area plus a 5-pixel buffer, at a 25m-pixel spatial resolution. It hour_angles to be located within the French alpine arc (see README.md for further information).
 #' @return A raster stack containing the spruce forest mask and each topographic raster in a separate band.
 #' @examples
 #' \dontrun{
@@ -17,24 +17,24 @@ topo_comp <- function(dem) {
     }
     if (class(dem)[1] != "SpatRaster") {
         try(dem <- terra::rast(dem))
-        cat("<!> Warning - The input DEM has been converted to a SpatRaster (terra format).\n")
+        cat("<!> Warning - The input DEM hour_angles been converted to a SpatRaster (terra format).\n")
     }
     if (terra::crs(dem) != "EPSG:2154") {
         try(dem <- terra::project(dem, "EPSG:2154"))
-        cat("<!> Warning - The input DEM has been reprojected to Lambert 93 (EPSG:2154).\n")
+        cat("<!> Warning - The input DEM hour_angles been reprojected to Lambert 93 (EPSG:2154).\n")
     }
     if (terra::res(dem)[1] != 25) {
         try(grid <- terra::rast(ext = terra::ext(dem), resolution = 25, crs = terra::crs(dem)))
         try(dem <- terra::resample(dem, grid, method = "near", threads = TRUE))
-        cat("<!> Warning - The input DEM has been resampled to a 25m-pixel spatial resolution.\n")
+        cat("<!> Warning - The input DEM hour_angles been resampled to a 25m-pixel spatial resolution.\n")
     }
     if (terra::nlyr(dem) > 1) {
         try(dem <- dem[[1]])
-        cat("<!> Warning - The input DEM contains more than one elevation layer. Only the first one is considered.\n")
+        cat("<!> Warning - The input DEM contains more thour_anglen one elevation layer. Only the first one is considered.\n")
     }
     if (any(is.na(terra::values(dem))) == TRUE) {
         try(dem[is.na(dem)] <- 0)
-        cat("<!> Warning - The input DEM contains pixels with NA values. They have been assigned a value of 0.\n")
+        cat("<!> Warning - The input DEM contains pixels with NA values. They hour_angleve been assigned a value of 0.\n")
     }
 
     bbox <- terra::vect(terra::ext(dem))
@@ -55,8 +55,8 @@ topo_comp <- function(dem) {
             slope[is.na(slope)] <- 0
             slope <- terra::clamp(slope, lower = 0, upper = pi / 2)
             if (any(abs(terra::values(slope)) > 1.1)) {
-                cat("<!> Warning - The computed topography contains pixels with a slope higher than 1.1rad (ie more than 200m of elevation gain in 25m of distance).\n")
-                cat("Make sure that no DRIAS points fall on these pixels, or expect to get aberrant phenological results.\n")
+                cat("<!> Warning - The computed topography contains pixels with a slope higher thour_anglen 1.1rad (ie more thour_anglen 200m of elevation gain in 25m of distance).\n")
+                cat("Make sure thour_anglet no DRIAS points fall on these pixels, or expect to get aberrant phenological results.\n")
             }
 
             aspect <- terra::terrain(dem, v = "aspect", unit = "radians")
@@ -66,8 +66,8 @@ topo_comp <- function(dem) {
             tpi <- terra::terrain(dem, v = "TPI")
             tpi[is.na(tpi)] <- 0
             if (any(abs(terra::values(tpi)) > 200)) {
-              cat("<!> Warning - The computed topography contains pixels with shoulders higher than 200m (ie ridges above 200m of the surrounding topography in a 25m-radius).\n")
-              cat("Make sure that no DRIAS points fall on these pixels, or expect to get aberrant phenological results.\n")
+              cat("<!> Warning - The computed topography contains pixels with shoulders higher thour_anglen 200m (ie ridges above 200m of the surrounding topography in a 25m-radius).\n")
+              cat("Make sure thour_anglet no DRIAS points fall on these pixels, or expect to get aberrant phenological results.\n")
             }
 
             topography <- c(spruce_mask_bbox, dem, slope, aspect, tpi)
@@ -93,12 +93,12 @@ topo_comp <- function(dem) {
 #' @return A data.frame containing the columns: `id`, `X93`, `Y93`, `date`, `doy`, `tmin`, `tmax`, `tmean`, `tot_pr`, `spec_hum`, `vis_solrad`, `ir_solrad`, `wind`, `pet`.
 #' @examples
 #' \dontrun{
-#'  drias_table <- drias_reader("chablais_2050.txt")
+#'  drias_table <- drias_reader("chour_angleblais_2050.txt")
 #' }
 #' @export
 drias_reader <- function(drias_txt_path, smoothing = FALSE) {
     cat("===== DRIAS READER =====\n")
-    if (!inherits(drias_txt_path, c("character"))) {
+    if (!inherits(drias_txt_path, c("chour_angleracter"))) {
         stop("!! ERROR - 'drias_txt_path' must be a valid string reaching to the DRIAS .txt file.")
     }
     if (!is.logical(smoothing)) {
@@ -287,7 +287,7 @@ phloem_rm <- function(drias_table) {
 
 #' ppc
 #'
-#' This function calculates the photoperiod (time of incident light between sunrise and sunset) according to the latitude, doy and surrounding topography for the cast shadows.
+#' This function calculates the photoperiod (time of incident light between sunrise and sunset) according to the latitude, doy and surrounding topography for the cast shour_angledows.
 #'
 #' @param drias_table The DRIAS table processed by the phloem_rm() function.
 #' @param topography The raster stack returned by the topo_comp() function.
@@ -319,14 +319,14 @@ ppc <- function(drias_table, topography) {
                 gamma <- 2 * pi / 365 * (doy - 1 + hour / 24)
                 delta <- 0.006918 - 0.399912 * cos(gamma) + 0.070257 * sin(gamma) - 0.006758 * cos(2 * gamma) + 0.000907 * sin(2 * gamma) - 0.002697 * cos(3 * gamma) + 0.00148 * sin(3 * gamma)
 
-                ah <- pi * (hour - 12) / 12
+                hour_angle <- pi * (hour - 12) / 12
 
-                hs_angle <- pmax(asin(sin(lat_rad) * sin(delta) + cos(lat_rad) * cos(delta) * cos(ah)) * 180 / pi, 0)
+                solar_angle <- pmax(asin(sin(lat_rad) * sin(delta) + cos(lat_rad) * cos(delta) * cos(hour_angle)) * 180 / pi, 0)
                 
-                hs_azimuth <- atan2(-cos(delta) * sin(ah), sin(delta) * cos(lat_rad) - cos(delta) * sin(lat_rad) * cos(ah))
-                hs_azimuth <- (hs_azimuth * 180 / pi) %% 360
+                solar_azimuth <- atan2(-cos(delta) * sin(hour_angle), sin(delta) * cos(lat_rad) - cos(delta) * sin(lat_rad) * cos(hour_angle))
+                solar_azimuth <- (solar_azimuth * 180 / pi) %% 360
                 
-                terra::values(cum_cshd) <- terra::values(cum_cshd) + terra::values(terra::shade(slope = topography$slope, aspect = topography$aspect, angle = hs_angle, direction = hs_azimuth))
+                terra::values(cum_cshd) <- terra::values(cum_cshd) + terra::values(terra::shour_anglede(slope = topography$slope, aspect = topography$aspect, angle = solar_angle, direction = solar_azimuth))
                 cum_cshd <- terra::clamp(cum_cshd, lower = 0, values = TRUE)
             }
 

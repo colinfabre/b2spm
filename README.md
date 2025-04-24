@@ -186,9 +186,80 @@ $$0 \leq T_{phloem} - T_{ext} \leq 2.5^\circ C$$
 
 ### Calculation of the Photoperiod Moderated by Cast Shadows
 
+Swarming and laying of bark-beetles are controlled by atmospherical conditions (such as temperature and precipitation), and the cessation of these activities is mainly dictated by two conditions:
 
+- a minimum threshold photoperiod (10h)
+- an average daily air temperature threshold (15°C)
 
+When the photoperiod threshold, and to a lesser extent the temperature threshold, are reached, the bark beetle's phenological activity decreases and it prepares for hibernation. Diapause is finally triggered after 5 days of maintaining these conditions. This marks the end of bark beetle attacks on spruce trees for that year.
 
+The photoperiod depends on the day of the year (`doy`) and the latitude. By simplifying the Fourier series representing the path of the sun, we can thus deduce the exposure time of a given point. But the surrounding topography induces cast shadows on this point, seeing its theorical solar exposure being reduced. Therefore, the theorical photoperiod is corrected by integrating topographic shading over daytime hours using the input DEM.
+
+#### 1. Theorical Solar Exposure
+
+This method uses an astronomical solar geometry model (simplified Fourier's Series) to estimate the theorical solar exposure at a given point over daytime hours.
+
+$$\gamma = \frac{2\pi}{365}(doy - 1 + \frac{h}{24})$$
+
+where:
+-$$\gamma$$ day angle (ie fraction fo the year in radians in the Fourier's Series, modulating the trigonometrical components of the declination as a function of the Earth's position on its orbit)
+- $$doy$$ day of the year (between 1 and 366)
+- $$h = 12$$
+
+$$\delta = 0.006918 - 0.399912\cos(\gamma) + 0.070257\sin(\gamma) - 0.006758\cos(2\gamma) + 0.000907\sin(2\gamma) - 0.002697\cos(3\gamma) + 0.00148\sin(3\gamma)$$
+
+where:
+- $$\delta$$ solar declination angle
+
+$$pp(doy) = \frac{24}{\pi} \times \arccos(-\tan(\phi) \times \tan(\delta))$$
+
+where:
+- $pp(doy)$$ theorical photoperiod (in hours) for the given doy
+
+#### 2. Cast Shadowing
+
+$$\gamma = \frac{2\pi}{365}(doy - 1 + \frac{h}{24})$$
+
+where:
+-$$\gamma$$ day angle (ie fraction fo the year in radians in the Fourier's Series, modulating the trigonometrical components of the declination as a function of the Earth's position on its orbit)
+- $$doy$$ day of the year (between 1 and 366)
+- $$h$$ calculation hour in 06.00 (sunrise at 45-47°N), 09.00, 12.00 (solar apex), 15.00 and 18.00 (sunset at 45-47°N)
+
+$$\delta = 0.006918 - 0.399912\cos(\gamma) + 0.070257\sin(\gamma) - 0.006758\cos(2\gamma) + 0.000907\sin(2\gamma) - 0.002697\cos(3\gamma) + 0.00148\sin(3\gamma)$$
+
+where:
+- $$\delta$$ solar declination angle (radians)
+
+$$angle(h) = \pi \times \frac{h - 12}{12}$$
+
+where:
+- $$angle(h)$$ solar angle from North (radians) as a function of the calculation hour $$h$$
+
+$$\alpha_{s} = \arcsin(\sin(\phi) \times \sin(\delta) + \cos(\phi) \times \cos(\delta) \times \cos(angle_{hour})\right]$$
+
+where:
+- $$\alpha_{s}$$ solar altitude angle (radians)
+- $$\phi$$ station latitude in radians
+Only positive solar altitude angles are considered for illumination.
+
+$$\theta_{s} = (atan2(-cos(\delta)) \times sin(angle_{hour}, sin(\delta) \times cos(\phi) - cos(\delta) \times sin(\phi) \times cos(angle_{hour})) \times 180 \divide \pi) %% 360$$
+
+where:
+- $$\theta_{s}$$ solar azimuth angle (radians) within [0; 360]
+
+For each calculation hour $$h$$ and its corresponding solar altitude angle $$\alpha_{s}$$ and azimuth angle $$\theta_{s}$$, the hillshade is computed using `terra::shade()` and slope and aspect derived from the input DEM.
+
+$$cshd(doy) = \frac{1}{5} \sum{h=9}^{18} \mathbb{I}_{shade}(\alpha_{s}, \theta_{s})$$
+
+where:
+- cshd(doy) clear-sky shading coefficient between 0 (complete shadowing) and 1 (complete clearing)
+
+#### 3. Real Photoperiod
+
+$$pp_{cshd}(doy) = pp(doy) \times cshd(doy)
+
+where:
+- $$pp_{cshd}(doy)$$ effective photoperiod (in hours) for the given doy, modulated by the surrounding topography
 
 ## Usage Example
 
@@ -248,3 +319,5 @@ SPERRY, J. et al. *Predicting stomatal responses to the environment from the opt
 CHOAT, B. et al. *Triggers of tree mortality under drought*, Nature, 2018. [CrossRef](https://doi.org/10.1038/s41586-018-0240-x)
 
 JAKOBY, O. et al. *Climate change alters elevational phenology patterns of the European spruce bark*, Global Change Biology, 2019. [CrossRef](https://doi.org/10.1111/gcb.14766)
+
+POTTERF, M. et al. *Hotter drought increases population levels and accelerates phenology of the European spruce bark beetle* Ips typographus, Forest Ecology and Management, 2025 [CrossRef](https://doi.org/10.1016/j.foreco.2025.122615)
