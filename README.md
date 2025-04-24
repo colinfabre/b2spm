@@ -202,7 +202,7 @@ This method uses an astronomical solar geometry model (simplified Fourier's Seri
 $$\gamma = \frac{2\pi}{365}(doy - 1 + \frac{h}{24})$$
 
 where:
--$$\gamma$$ day angle (ie fraction fo the year in radians in the Fourier's Series, modulating the trigonometrical components of the declination as a function of the Earth's position on its orbit)
+- $$\gamma$$ day angle (ie fraction fo the year in radians in the Fourier's Series, modulating the trigonometrical components of the declination as a function of the Earth's position on its orbit)
 - $$doy$$ day of the year (between 1 and 366)
 - $$h = 12$$
 
@@ -214,7 +214,8 @@ where:
 $$pp(doy) = \frac{24}{\pi} \times \arccos(-\tan(\phi) \times \tan(\delta))$$
 
 where:
-- $pp(doy)$$ theorical photoperiod (in hours) for the given doy
+- $$\phi$$ station latitude (radians)
+- $pp(doy)$$ theorical photoperiod (hours) for the given doy
 
 #### 2. Cast Shadowing
 
@@ -238,11 +239,9 @@ where:
 $$\alpha_{s} = \arcsin(\sin(\phi) \times \sin(\delta) + \cos(\phi) \times \cos(\delta) \times \cos(angle_{hour})\right]$$
 
 where:
-- $$\alpha_{s}$$ solar altitude angle (radians)
-- $$\phi$$ station latitude in radians
-Only positive solar altitude angles are considered for illumination.
+- $$\alpha_{s}$$ solar altitude angle (radians); only positive solar altitude angles are considered for illumination.
 
-$$\theta_{s} = (atan2(-cos(\delta)) \times sin(angle_{hour}, sin(\delta) \times cos(\phi) - cos(\delta) \times sin(\phi) \times cos(angle_{hour})) \times 180 \divide \pi) %% 360$$
+$$\theta_{s} = (atan2(-cos(\delta) \times sin(angle_{hour}), sin(\delta) \times cos(\phi) - cos(\delta) \times sin(\phi) \times cos(angle_{hour})) \times 180 \divide \pi) %% 360$$
 
 where:
 - $$\theta_{s}$$ solar azimuth angle (radians) within [0; 360]
