@@ -251,7 +251,7 @@ For each calculation hour $$h$$ and its corresponding solar altitude angle $$\al
 $$cshd(doy) = \frac{1}{5} \sum_{h=9}^{18} \mathbb{I}_{\text{sunlit}}(\alpha_s(h), \theta_s(h))$$
 
 where:
-- cshd(doy) clear-sky shading coefficient between 0 (complete shadowing) and 1 (complete clearing)
+- $$cshd(doy)$$ clear-sky shading coefficient between 0 (complete shadowing) and 1 (complete clearing)
 
 #### 3. Real Photoperiod
 
