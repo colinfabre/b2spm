@@ -215,14 +215,14 @@ $$pp(doy) = \frac{24}{\pi} \times \arccos(-\tan(\phi) \times \tan(\delta))$$
 
 where:
 - $$\phi$$ station latitude (radians)
-- $pp(doy)$$ theorical photoperiod (hours) for the given doy
+- $$pp(doy)$$ theorical photoperiod (hours) for the given doy
 
 #### 2. Cast Shadowing
 
 $$\gamma = \frac{2\pi}{365}(doy - 1 + \frac{h}{24})$$
 
 where:
--$$\gamma$$ day angle (ie fraction fo the year in radians in the Fourier's Series, modulating the trigonometrical components of the declination as a function of the Earth's position on its orbit)
+- $$\gamma$$ day angle (ie fraction fo the year in radians in the Fourier's Series, modulating the trigonometrical components of the declination as a function of the Earth's position on its orbit)
 - $$doy$$ day of the year (between 1 and 366)
 - $$h$$ calculation hour in 06.00 (sunrise at 45-47°N), 09.00, 12.00 (solar apex), 15.00 and 18.00 (sunset at 45-47°N)
 
@@ -241,21 +241,21 @@ $$\alpha_{s} = \arcsin(\sin(\phi) \times \sin(\delta) + \cos(\phi) \times \cos(\
 where:
 - $$\alpha_{s}$$ solar altitude angle (radians); only positive solar altitude angles are considered for illumination.
 
-$$\theta_{s} = (atan2(-cos(\delta) \times sin(angle_{hour}), sin(\delta) \times cos(\phi) - cos(\delta) \times sin(\phi) \times cos(angle_{hour})) \times 180 \divide \pi) %% 360$$
+$$\theta_{s} = (atan2(-cos(\delta) \times sin(angle_{hour}), sin(\delta) \times cos(\phi) - cos(\delta) \times sin(\phi) \times cos(angle_{hour})) \times 180 \divide {\pi}) %% 360$$
 
 where:
 - $$\theta_{s}$$ solar azimuth angle (radians) within [0; 360]
 
 For each calculation hour $$h$$ and its corresponding solar altitude angle $$\alpha_{s}$$ and azimuth angle $$\theta_{s}$$, the hillshade is computed using `terra::shade()` and slope and aspect derived from the input DEM.
 
-$$cshd(doy) = \frac{1}{5} \sum{h=9}^{18} \mathbb{I}_{shade}(\alpha_{s}, \theta_{s})$$
+$$cshd(doy) = \frac{1}{5} \sum{h=9}^{18} \I_{shade}(\alpha_{s}, \theta_{s})$$
 
 where:
 - cshd(doy) clear-sky shading coefficient between 0 (complete shadowing) and 1 (complete clearing)
 
 #### 3. Real Photoperiod
 
-$$pp_{cshd}(doy) = pp(doy) \times cshd(doy)
+$$pp_{cshd}(doy) = pp(doy) \times cshd(doy)$$
 
 where:
 - $$pp_{cshd}(doy)$$ effective photoperiod (in hours) for the given doy, modulated by the surrounding topography
