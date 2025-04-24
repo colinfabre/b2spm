@@ -193,7 +193,7 @@ Swarming and laying of bark-beetles are controlled by atmospherical conditions (
 
 When the photoperiod threshold, and to a lesser extent the temperature threshold, are reached, the bark beetle's phenological activity decreases and it prepares for hibernation. Diapause is finally triggered after 5 days of maintaining these conditions. This marks the end of bark beetle attacks on spruce trees for that year.
 
-The photoperiod depends on the day of the year (`doy`) and the latitude. By simplifying the Fourier series representing the path of the sun, we can thus deduce the exposure time of a given point. But the surrounding topography induces cast shadows on this point, seeing its theorical solar exposure being reduced. Therefore, the theorical photoperiod is corrected by integrating topographic shading over daytime hours using the input DEM.
+The photoperiod depends on the day of the year ($$doy$$) and the latitude. By simplifying the Fourier series representing the path of the sun, we can thus deduce the exposure time of a given point. But the surrounding topography induces cast shadows on this point, seeing its theorical solar exposure being reduced. Therefore, the theorical photoperiod is corrected by integrating topographic shading over daytime hours using the input DEM.
 
 #### 1. Theorical Solar Exposure
 
@@ -241,14 +241,14 @@ $$\alpha_{s} = \arcsin[\sin(\phi) \times \sin(\delta) + \cos(\phi) \times \cos(\
 where:
 - $$\alpha_{s}$$ solar altitude angle (radians); only positive solar altitude angles are considered for illumination.
 
-$$\theta_{s} = (atan2(-cos(\delta) \times sin(angle_{hour}), sin(\delta) \times cos(\phi) - cos(\delta) \times sin(\phi) \times cos(angle_{hour})) \times \frac{180}{\pi}) \bmod 360$$
+$$\theta_{s} = [atan2(-cos(\delta) \times sin(angle_{hour}), sin(\delta) \times cos(\phi) - cos(\delta) \times sin(\phi) \times cos(angle_{hour})) \times \frac{180}{\pi}] \bmod 360$$
 
 where:
 - $$\theta_{s}$$ solar azimuth angle (radians) within [0; 360]
 
 For each calculation hour $$h$$ and its corresponding solar altitude angle $$\alpha_{s}$$ and azimuth angle $$\theta_{s}$$, the hillshade is computed using `terra::shade()` and slope and aspect derived from the input DEM.
 
-$$cshd(doy) = \frac{1}{5} \sum{h=9}^{18} \mathbb{I}_{sunlit}(\alpha_{s}, \theta_{s})$$
+$$cshd(doy) = \frac{1}{5} \sum{h=9}^{18} II_{sunlit}(\alpha_{s}, \theta_{s})$$
 
 where:
 - cshd(doy) clear-sky shading coefficient between 0 (complete shadowing) and 1 (complete clearing)
