@@ -248,7 +248,7 @@ where:
 
 For each calculation hour $$h$$ and its corresponding solar altitude angle $$\alpha_{s}$$ and azimuth angle $$\theta_{s}$$, the hillshade is computed using `terra::shade()` and slope and aspect derived from the input DEM.
 
-$$cshd(doy) = \frac{1}{5} \sum{h=9}^{18} II_{sunlit}(\alpha_{s}, \theta_{s})$$
+$$cshd(doy) = \frac{1}{5} \sum_{h=9}^{18} \mathbb{I}_{\text{sunlit}}(\alpha_s(h), \theta_s(h))$$
 
 where:
 - cshd(doy) clear-sky shading coefficient between 0 (complete shadowing) and 1 (complete clearing)
