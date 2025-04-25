@@ -551,7 +551,7 @@ maturing <- function(drias_table, swarming_table, topography) {
 #' This function calculates the hydraulic stress index of spruce forests according to the water balance P-ETP and the AWC_max (Available Water Content) map (PIEDALLU, C. et al. Cartographie de la Réserve Utile Maximale en Eau des sols forestiers de France, UMR SILVAE, 2012).
 #'
 #' @param drias_table The DRIAS table processed by the ppc() function.
-#' @return A data.frame with the columns: `id`, `X93`, `Y93`, `his` (maximal hydraulic stress index throughout the year).
+#' @return A data.frame with the columns: `id`, `X93`, `Y93`, `hsi` (maximal hydraulic stress index throughout the year).
 #' @examples
 #' \dontrun{
 #'  drias_table <- hsc(drias_table)
