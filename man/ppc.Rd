@@ -4,12 +4,14 @@
 \alias{ppc}
 \title{ppc}
 \usage{
-ppc(drias_table, topography)
+ppc(drias_table, topography, hourly_cshd = FALSE)
 }
 \arguments{
 \item{drias_table}{The DRIAS table processed by the phloem_rm() function.}
 
 \item{topography}{The raster stack returned by the topo_comp() function.}
+
+\item{hourly_cshd}{Whether the cast shadows should be computed throughout the course of the sun (at 06.00, 09.00, 12.00, 15.00 and 18.00) or just at noon (minimum shadowing). `hourly_cshd` = TRUE can multiply the computation time by 2.5, but the results are more accurate.}
 }
 \value{
 The updated DRIAS table with additional column `photoperiod` containing the duration of the photoperiod for each day.

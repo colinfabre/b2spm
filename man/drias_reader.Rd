@@ -9,7 +9,7 @@ drias_reader(drias_txt_path, smoothing = FALSE)
 \arguments{
 \item{drias_txt_path}{The path to the text file containing DRIAS climatic data. The data must be comma-separated, the date must be in DD/MM/YYYY format, and it must include tmin (K), tmax (K), tmean (K), tot_pr (kg/m2/s), spec_hum (kg/kg), vis_solrad (W/m2), ir_solrad (W/m2), wind (m/s) and pet (kg/m2/s).}
 
-\item{smoothing}{Should the data be averaged around the central year (must provide an odd number of years). Simulated climate data are usually averaged with a 10-year range on either side of the central year to analyze.}
+\item{smoothing}{Whether the data should be averaged around the central year (must provide an odd number of years) or not. Simulated climate data are usually averaged with a 10-year range on either side of the central year to analyze.}
 }
 \value{
 A data.frame containing the columns: `id`, `X93`, `Y93`, `date`, `doy`, `tmin`, `tmax`, `tmean`, `tot_pr`, `spec_hum`, `vis_solrad`, `ir_solrad`, `wind`, `pet`.

@@ -10,7 +10,7 @@ hsc(drias_table)
 \item{drias_table}{The DRIAS table processed by the ppc() function.}
 }
 \value{
-A data.frame with the columns: `id`, `X93`, `Y93`, `his` (maximal hydraulic stress index throughout the year).
+A data.frame with the columns: `id`, `X93`, `Y93`, `hsi` (maximal hydraulic stress index throughout the year).
 }
 \description{
 This function calculates the hydraulic stress index of spruce forests according to the water balance P-ETP and the AWC_max (Available Water Content) map (PIEDALLU, C. et al. Cartographie de la Réserve Utile Maximale en Eau des sols forestiers de France, UMR SILVAE, 2012).

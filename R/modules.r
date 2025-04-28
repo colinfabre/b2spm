@@ -89,7 +89,7 @@ topo_comp <- function(dem) {
 #' This function reads a text file containing climatic data from DRIAS and formats it into a dataframe compatible with the B2SPM pipeline.
 #'
 #' @param drias_txt_path The path to the text file containing DRIAS climatic data. The data must be comma-separated, the date must be in DD/MM/YYYY format, and it must include tmin (K), tmax (K), tmean (K), tot_pr (kg/m2/s), spec_hum (kg/kg), vis_solrad (W/m2), ir_solrad (W/m2), wind (m/s) and pet (kg/m2/s).
-#' @param smoothing Should the data be averaged around the central year (must provide an odd number of years). Simulated climate data are usually averaged with a 10-year range on either side of the central year to analyze.
+#' @param smoothing Whether the data should be averaged around the central year (must provide an odd number of years) or not. Simulated climate data are usually averaged with a 10-year range on either side of the central year to analyze.
 #' @return A data.frame containing the columns: `id`, `X93`, `Y93`, `date`, `doy`, `tmin`, `tmax`, `tmean`, `tot_pr`, `spec_hum`, `vis_solrad`, `ir_solrad`, `wind`, `pet`.
 #' @examples
 #' \dontrun{
@@ -291,14 +291,19 @@ phloem_rm <- function(drias_table) {
 #'
 #' @param drias_table The DRIAS table processed by the phloem_rm() function.
 #' @param topography The raster stack returned by the topo_comp() function.
+#' @param hourly_cshd Whether the cast shadows should be computed throughout the course of the sun (at 06.00, 09.00, 12.00, 15.00 and 18.00) or just at noon (minimum shadowing). `hourly_cshd` = TRUE can multiply the computation time by 2.5, but the results are more accurate.
 #' @return The updated DRIAS table with additional column `photoperiod` containing the duration of the photoperiod for each day.
 #' @examples
 #' \dontrun{
 #'  drias_table <- ppc(drias_table, topography)
 #' }
 #' @export
-ppc <- function(drias_table, topography) {
+ppc <- function(drias_table, topography, hourly_cshd = FALSE) {
     cat("===== PHOTOPERIOD COMPUTER =====\n")
+    if (!is.logical(hourly_cshd)) {
+        stop("!! ERROR - 'hourly_cshd' must be TRUE or FALSE.")
+    }
+
     stations <- unique(drias_table$id)
 
     results <- lapply(stations, function(station) {
@@ -307,13 +312,18 @@ ppc <- function(drias_table, topography) {
         station_point_4326 <- terra::project(station_point, "EPSG:4326")
 
         lat <- round(terra::crds(station_point_4326)[2], 5)
-        lat_rad <- lat * pi / 180
+        lat_rad <- round(lat * pi / 180, 5)
 
-        hours <- c(6, 9, 12, 15, 18)
+        if (hourly_cshd == FALSE) {
+            hours <- c(12)
+        } else {
+            hours <- c(6, 9, 12, 15, 18)
+        }
 
         for (doy in station_data$doy) {
             cum_cshd <- terra::rast(topography$alt)
             terra::values(cum_cshd) <- 0
+            i <- 0
             
             for (hour in hours) {
                 gamma <- 2 * pi / 365 * (doy - 1 + hour / 24)
@@ -323,14 +333,20 @@ ppc <- function(drias_table, topography) {
 
                 solar_angle <- pmax(asin(sin(lat_rad) * sin(delta) + cos(lat_rad) * cos(delta) * cos(hour_angle)) * 180 / pi, 0)
                 
-                solar_azimuth <- atan2(-cos(delta) * sin(hour_angle), sin(delta) * cos(lat_rad) - cos(delta) * sin(lat_rad) * cos(hour_angle))
-                solar_azimuth <- (solar_azimuth * 180 / pi) %% 360
-                
-                terra::values(cum_cshd) <- terra::values(cum_cshd) + terra::values(terra::shade(slope = topography$slope, aspect = topography$aspect, angle = solar_angle, direction = solar_azimuth))
-                cum_cshd <- terra::clamp(cum_cshd, lower = 0, values = TRUE)
+                if (solar_angle > 0) {
+                    solar_azimuth <- atan2(-cos(delta) * sin(hour_angle), sin(delta) * cos(lat_rad) - cos(delta) * sin(lat_rad) * cos(hour_angle))
+                    solar_azimuth <- (solar_azimuth * 180 / pi) %% 360
+                    
+                    terra::values(cum_cshd) <- terra::values(cum_cshd) + terra::values(terra::shade(slope = topography$slope, aspect = topography$aspect, angle = solar_angle, direction = solar_azimuth))
+                    cum_cshd <- terra::clamp(cum_cshd, lower = 0, values = TRUE)
+
+                    i <- i + 1
+                } else {
+                    next
+                }
             }
 
-            mean_cshd <- round(cum_cshd / 5, 2)
+            mean_cshd <- round(cum_cshd / i, 2)
             station_cshd <- terra::extract(mean_cshd, station_point)[, 2]
 
             gamma <- 2 * pi / 365 * (doy - 1 + 12 / 24)
@@ -742,13 +758,14 @@ rpc <- function(spat_ind) {
 #'
 #' @param topography The raster stack returned by the topo_comp() function.
 #' @param drias_table The DRIAS table processed either by the drias_reader() or the drias_fetcher() function.
+#' @param ppc_param Whether the `pcc()` function parameter should be set to TRUE or FALSE. See the `hourly_cshd` paramater in the `ppc()` function documentation for more details.
 #' @return A raster stack containing the spatialized phenological indicators (`awakening_doy`, `swarming_doy`, `maturing_doy`), the attack risk (`Rpheno`), and the maximum number of generations per year (`max_gen`).
 #' @examples
 #' \dontrun{
 #'  results <- pipeline(topography, drias_table)
 #' }
 #' @export
-pipeline <- function(topography, drias_table) {
+pipeline <- function(topography, drias_table, ppc_param = FALSE) {
     cat("\n")
     cat("+--------------------------------------------------------------------------------------------------+\n")
     cat("|-------------------------------- B2SPM PIPELINE INITIALISATION... --------------------------------|\n")
@@ -758,7 +775,7 @@ pipeline <- function(topography, drias_table) {
     drias_table <- phloem_rm(drias_table)
     cat("\n")
 
-    drias_table <- ppc(drias_table, topography)
+    drias_table <- ppc(drias_table, topography, hourly_cshd = ppc_param)
     cat("\n")
 
     awakening_table <- awakening(drias_table, topography)

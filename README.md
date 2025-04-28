@@ -260,6 +260,8 @@ $$pp_{cshd}(doy) = pp(doy) \times cshd(doy)$$
 where:
 - $$pp_{cshd}(doy)$$ effective photoperiod (in hours) for the given doy, modulated by the surrounding topography
 
+As this whole process can be very computationally expensive (around 20 hours for the 808 DRIAS points of the alpine arc for one year), it's disabled by default and the real photoperiod is calculated as the theoretical photoperiod moderated by the topography cast shadowing at noon. However, the parameter `hourly_cshd` can be set to TRUE in order to calculate a more precise real photoperiod moderated by the topography cast shadowing at the different hours mentionned above.
+
 ## Usage Example
 
 ```r

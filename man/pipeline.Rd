@@ -4,12 +4,14 @@
 \alias{pipeline}
 \title{pipeline}
 \usage{
-pipeline(topography, drias_table)
+pipeline(topography, drias_table, ppc_param = FALSE)
 }
 \arguments{
 \item{topography}{The raster stack returned by the topo_comp() function.}
 
 \item{drias_table}{The DRIAS table processed either by the drias_reader() or the drias_fetcher() function.}
+
+\item{ppc_param}{Whether the `pcc()` function parameter should be set to TRUE or FALSE. See the `hourly_cshd` paramater in the `ppc()` function documentation for more details.}
 }
 \value{
 A raster stack containing the spatialized phenological indicators (`awakening_doy`, `swarming_doy`, `maturing_doy`), the attack risk (`Rpheno`), and the maximum number of generations per year (`max_gen`).
