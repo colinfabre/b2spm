@@ -291,17 +291,17 @@ phloem_rm <- function(drias_table) {
 #'
 #' @param drias_table The DRIAS table processed by the phloem_rm() function.
 #' @param topography The raster stack returned by the topo_comp() function.
-#' @param hourly_cshd Whether the cast shadows should be computed throughout the course of the sun (at 06.00, 09.00, 12.00, 15.00 and 18.00) or just at noon (minimum shadowing). `hourly_cshd` = TRUE can multiply the computation time by 2.5, but the results are more accurate.
+#' @param precision The level of computation precision for the cast shadowing. `precision = 1` means the cast shadows are computed as a constant through a 15-days window. `precision = 2` means the cast shadows are daily computed at 12.00 (minimum shadowing). `precision = 3` means the cast shadows are daily computed throughout the course of the sun (at 06.00, 09.00, 12.00, 15.00 and 18.00); in that case, expect the computation time to be multiplied by 2.5 from `precision = 2`.
 #' @return The updated DRIAS table with additional column `photoperiod` containing the duration of the photoperiod for each day.
 #' @examples
 #' \dontrun{
 #'  drias_table <- ppc(drias_table, topography)
 #' }
 #' @export
-ppc <- function(drias_table, topography, hourly_cshd = FALSE) {
+ppc <- function(drias_table, topography, precision = 1) {
     cat("===== PHOTOPERIOD COMPUTER =====\n")
-    if (!is.logical(hourly_cshd)) {
-        stop("!! ERROR - 'hourly_cshd' must be TRUE or FALSE.")
+    if (precision != 1 && precision != 2 && precision != 3) {
+        stop("!! ERROR - 'precision' must be set to 1, 2 or 3.")
     }
 
     stations <- unique(drias_table$id)
@@ -314,46 +314,102 @@ ppc <- function(drias_table, topography, hourly_cshd = FALSE) {
         lat <- round(terra::crds(station_point_4326)[2], 5)
         lat_rad <- round(lat * pi / 180, 5)
 
-        if (hourly_cshd == FALSE) {
+        if (precision == 1) {
             hours <- c(12)
-        } else {
-            hours <- c(6, 9, 12, 15, 18)
-        }
+            windows_centers <- 8:(max(station_data$doy) - 7)
 
-        for (doy in station_data$doy) {
-            cum_cshd <- terra::rast(topography$alt)
-            terra::values(cum_cshd) <- 0
-            i <- 0
-            
-            for (hour in hours) {
-                gamma <- 2 * pi / 365 * (doy - 1 + hour / 24)
-                delta <- 0.006918 - 0.399912 * cos(gamma) + 0.070257 * sin(gamma) - 0.006758 * cos(2 * gamma) + 0.000907 * sin(2 * gamma) - 0.002697 * cos(3 * gamma) + 0.00148 * sin(3 * gamma)
+            for (center in windows_centers) {
+                window_days <- (center - 7):(center + 7) 
 
-                hour_angle <- pi * (hour - 12) / 12
+                cum_cshd <- terra::rast(topography$alt)
+                terra::values(cum_cshd) <- 0
+                i <- 0
 
-                solar_angle <- pmax(asin(sin(lat_rad) * sin(delta) + cos(lat_rad) * cos(delta) * cos(hour_angle)) * 180 / pi, 0)
-                
-                if (solar_angle > 0) {
-                    solar_azimuth <- atan2(-cos(delta) * sin(hour_angle), sin(delta) * cos(lat_rad) - cos(delta) * sin(lat_rad) * cos(hour_angle))
-                    solar_azimuth <- (solar_azimuth * 180 / pi) %% 360
-                    
-                    terra::values(cum_cshd) <- terra::values(cum_cshd) + terra::values(terra::shade(slope = topography$slope, aspect = topography$aspect, angle = solar_angle, direction = solar_azimuth))
-                    cum_cshd <- terra::clamp(cum_cshd, lower = 0, values = TRUE)
+                for (hour in hours) {
+                    gamma <- 2 * pi / 365 * (center - 1 + hour / 24)
+                    delta <- 0.006918 - 0.399912 * cos(gamma) + 0.070257 * sin(gamma) -
+                            0.006758 * cos(2 * gamma) + 0.000907 * sin(2 * gamma) -
+                            0.002697 * cos(3 * gamma) + 0.00148 * sin(3 * gamma)
 
-                    i <- i + 1
-                } else {
-                    next
+                    hour_angle <- pi * (hour - 12) / 12
+
+                    solar_angle <- pmax(asin(sin(lat_rad) * sin(delta) + cos(lat_rad) * cos(delta) * cos(hour_angle)) * 180 / pi, 0)
+
+                    if (solar_angle > 0) {
+                        solar_azimuth <- atan2(
+                            -cos(delta) * sin(hour_angle),
+                            sin(delta) * cos(lat_rad) - cos(delta) * sin(lat_rad) * cos(hour_angle)
+                        )
+                        solar_azimuth <- (solar_azimuth * 180 / pi) %% 360
+
+                        terra::values(cum_cshd) <- terra::values(cum_cshd) +
+                            terra::values(terra::shade(
+                                slope = topography$slope,
+                                aspect = topography$aspect,
+                                angle = solar_angle,
+                                direction = solar_azimuth
+                            ))
+
+                        cum_cshd <- terra::clamp(cum_cshd, lower = 0, values = TRUE)
+                        i <- i + 1
+                    }
                 }
+
+                mean_cshd <- round(cum_cshd / i, 2)
+                station_cshd <- terra::extract(mean_cshd, station_point)[, 2]
+
+                gamma <- 2 * pi / 365 * (center - 1 + 12 / 24)
+                delta <- 0.006918 - 0.399912 * cos(gamma) + 0.070257 * sin(gamma) -
+                        0.006758 * cos(2 * gamma) + 0.000907 * sin(2 * gamma) -
+                        0.002697 * cos(3 * gamma) + 0.00148 * sin(3 * gamma)
+
+                pp <- (24 / pi) * acos(-tan(lat_rad) * tan(delta))
+
+                station_data[station_data$doy %in% window_days, "pp_cshd"] <- round(pp * station_cshd, 1)
             }
 
-            mean_cshd <- round(cum_cshd / i, 2)
-            station_cshd <- terra::extract(mean_cshd, station_point)[, 2]
+        } else {
+            if (precision == 2) {
+                hours <- c(12)
+            } else if (precision == 3) {
+            hours <- c(6, 9, 12, 15, 18)
+            }
 
-            gamma <- 2 * pi / 365 * (doy - 1 + 12 / 24)
-            delta <- 0.006918 - 0.399912 * cos(gamma) + 0.070257 * sin(gamma) - 0.006758 * cos(2 * gamma) + 0.000907 * sin(2 * gamma) - 0.002697 * cos(3 * gamma) + 0.00148 * sin(3 * gamma)
-            pp <- (24 / pi) * acos(-tan(lat_rad) * tan(delta))
+            for (doy in station_data$doy) {
+                cum_cshd <- terra::rast(topography$alt)
+                terra::values(cum_cshd) <- 0
+                i <- 0
 
-            station_data[station_data$doy == doy, "pp_cshd"] <- round(pp * station_cshd, 1)
+                for (hour in hours) {
+                    gamma <- 2 * pi / 365 * (doy - 1 + hour / 24)
+                    delta <- 0.006918 - 0.399912 * cos(gamma) + 0.070257 * sin(gamma) - 0.006758 * cos(2 * gamma) + 0.000907 * sin(2 * gamma) - 0.002697 * cos(3 * gamma) + 0.00148 * sin(3 * gamma)
+
+                    hour_angle <- pi * (hour - 12) / 12
+
+                    solar_angle <- pmax(asin(sin(lat_rad) * sin(delta) + cos(lat_rad) * cos(delta) * cos(hour_angle)) * 180 / pi, 0)
+                    
+                    if (solar_angle > 0) {
+                        solar_azimuth <- atan2(-cos(delta) * sin(hour_angle), sin(delta) * cos(lat_rad) - cos(delta) * sin(lat_rad) * cos(hour_angle))
+                        solar_azimuth <- (solar_azimuth * 180 / pi) %% 360
+                        
+                        terra::values(cum_cshd) <- terra::values(cum_cshd) + terra::values(terra::shade(slope = topography$slope, aspect = topography$aspect, angle = solar_angle, direction = solar_azimuth))
+                        cum_cshd <- terra::clamp(cum_cshd, lower = 0, values = TRUE)
+
+                        i <- i + 1
+                    } else {
+                        next
+                    }
+                }
+
+                mean_cshd <- round(cum_cshd / i, 2)
+                station_cshd <- terra::extract(mean_cshd, station_point)[, 2]
+
+                gamma <- 2 * pi / 365 * (doy - 1 + 12 / 24)
+                delta <- 0.006918 - 0.399912 * cos(gamma) + 0.070257 * sin(gamma) - 0.006758 * cos(2 * gamma) + 0.000907 * sin(2 * gamma) - 0.002697 * cos(3 * gamma) + 0.00148 * sin(3 * gamma)
+                pp <- (24 / pi) * acos(-tan(lat_rad) * tan(delta))
+
+                station_data[station_data$doy == doy, "pp_cshd"] <- round(pp * station_cshd, 1)
+            }
         }
 
         return(station_data)
@@ -760,14 +816,15 @@ rpc <- function(spat_ind) {
 #'
 #' @param topography The raster stack returned by the topo_comp() function.
 #' @param drias_table The DRIAS table processed either by the drias_reader() or the drias_fetcher() function.
-#' @param ppc_param Whether the `pcc()` function parameter should be set to TRUE or FALSE. See the `hourly_cshd` paramater in the `ppc()` function documentation for more details.
+#' @param return_tables Whether the intermediate phenological tables (`awakening_table`, `swarming_table` and `maturing_table`) should be returned as ouputs of the pipeline or not.
+#' @param precision The level of computation precision of the `pcc()` function. See the `precision` paramater in the `ppc()` function documentation for more details.
 #' @return A raster stack containing the spatialized phenological indicators (`awakening_doy`, `swarming_doy`, `maturing_doy`), the attack risk (`Rpheno`), and the maximum number of generations per year (`max_gen`).
 #' @examples
 #' \dontrun{
 #'  results <- pipeline(topography, drias_table)
 #' }
 #' @export
-pipeline <- function(topography, drias_table, ppc_param = FALSE) { # rajouter param bool pour renvoi ou non des tables intermédiaires
+pipeline <- function(topography, drias_table, return_tables = FALSE, precision = 1) {
     cat("\n")
     cat("+--------------------------------------------------------------------------------------------------+\n")
     cat("|-------------------------------- B2SPM PIPELINE INITIALISATION... --------------------------------|\n")
@@ -806,12 +863,15 @@ pipeline <- function(topography, drias_table, ppc_param = FALSE) { # rajouter pa
     cat("Checking data compatibility...\n")
     if (terra::ext(topography$alt) < terra::ext(terra::vect(drias_table, geom = c("X93", "Y93"), crs = terra::crs(topography))) + 250) {
         stop("!! ERROR - The input DEM in the `topo_comp()` function is smaller than the ROI + the 250m required buffer.\n")
+    } else {
+        cat("Data compatibility -- OK\n")
+        cat("\n")
     }
 
     drias_table <- phloem_rm(drias_table)
     cat("\n")
 
-    drias_table <- ppc(drias_table, topography, hourly_cshd = ppc_param)
+    drias_table <- ppc(drias_table, topography, precision = precision)
     cat("\n")
 
     awakening_table <- awakening(drias_table, topography)
@@ -829,7 +889,11 @@ pipeline <- function(topography, drias_table, ppc_param = FALSE) { # rajouter pa
     rpheno <- rpc(spat_ind)
     cat("\n")
 
-    results <- c(spat_ind, rpheno)
+    if (return_tables == FALSE) {
+        results <- c(spat_ind, rpheno)
+    } else {
+        results <- c(awakening_table, swarming_table, maturing_table, hsi_table, spat_ind, rpheno)
+    }
 
     cat("\n")
     cat("+--------------------------------------------------------------------------------------------------+\n")
