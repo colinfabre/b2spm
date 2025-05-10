@@ -2,7 +2,7 @@
 #'
 #' This function loads the spruce forest mask and computes topographic data for the study area using the provided DEM.
 #'
-#' @param dem A raster (preferably a SpatRaster in EPSG:2154) representing elevation, covering the entire study area plus a 5-pixel buffer, at a 25m-pixel spatial resolution. It has to be located within the French alpine arc (see README.md for further information).
+#' @param dem A raster (preferably a SpatRaster in EPSG:2154) representing elevation, at a 25m-pixel spatial resolution, covering the entire study area plus a 10-pixel buffer (ie 250m). It has to be located within the French alpine arc (see README.md for further information).
 #' @return A raster stack containing the spruce forest mask and each topographic raster in a separate band.
 #' @examples
 #' \dontrun{
@@ -194,7 +194,7 @@ drias_fetcher <- function(topography, year) {
     cat("Please wait...\n")
     drias_points <- tryCatch({
         terra::vect(paste0("https://github.com/colinfabre/b2spm_database/raw/refs/heads/main/alpine_arc_", year, ".gpkg"))},
-        error = function(e) {stop(cat(paste0("!! ERROR -  Impossible to fetch the online database corresponding to the provided year. Please check your internet connection.\n")))})
+        error = function(e) {stop("!! ERROR -  Impossible to fetch the online database corresponding to the provided year. Please check your internet connection.\n")})
     cat("The online database was correctly fetched.\n")
     terra::crs(drias_points) <- "EPSG:27572"
     drias_points <- terra::project(drias_points, "EPSG:2154")
@@ -218,7 +218,7 @@ drias_fetcher <- function(topography, year) {
             
             year_mask <- tryCatch({
                 as.numeric(substr(station_data$date, 7, 10)) == year},
-                error = function(e) {stop(cat(paste0("!! ERROR -  Impossible to extract and convert records dates for station ", station, ".\n")))})
+                error = function(e) {stop("!! ERROR -  Impossible to extract and convert records dates for station ", station, ".\n")})
             doy_val <- seq_len(sum(year_mask))
             station_data$doy[year_mask] <- doy_val
         }
@@ -656,7 +656,7 @@ kpi <- function(awakening_table, swarming_table, maturing_table, hsi_table, topo
     cat("===== INDICATORS SPATIALISATION =====\n")
 
     data <- Reduce(function(x, y) merge(x, y, by = c("id", "X93", "Y93"), all = TRUE), list(awakening_table, swarming_table, maturing_table, hsi_table))
-    data <- data[, c(1:4, 6:8)]
+    data <- data[, c(1:4, 6:7, 10)]
     data <- data["awakening_doy" != 0, ]
     data_sf <- sf::st_as_sf(data, coords = c("X93", "Y93"), crs = 2154)
     vars <- c("awakening_doy", "swarming_doy", "maturing_doy", "hsi")
@@ -678,9 +678,11 @@ kpi <- function(awakening_table, swarming_table, maturing_table, hsi_table, topo
 
             idwed_ind <- terra::rast(idw_df, type = "xyz", crs = terra::crs(grid))
             idwed_ind <- terra::resample(idwed_ind, grid, method = "near")
-            idwed_ind[is.na(topography$spruce_forests)] <- NA
+            idwed_ind[is.na(terra::resample(topography$spruce_forests, grid, method = "near"))] <- NA
             idwed_ind[idwed_ind < 0] <- 0
-            terra::values(idwed_ind) <- ceiling(terra::values(idwed_ind))
+            if (var != "hsi") {
+              terra::values(idwed_ind) <- ceiling(terra::values(idwed_ind)) 
+            }
             names(idwed_ind) <- var
 
             return(idwed_ind)
@@ -765,12 +767,46 @@ rpc <- function(spat_ind) {
 #'  results <- pipeline(topography, drias_table)
 #' }
 #' @export
-pipeline <- function(topography, drias_table, ppc_param = FALSE) {
+pipeline <- function(topography, drias_table, ppc_param = FALSE) { # rajouter param bool pour renvoi ou non des tables intermédiaires
     cat("\n")
     cat("+--------------------------------------------------------------------------------------------------+\n")
     cat("|-------------------------------- B2SPM PIPELINE INITIALISATION... --------------------------------|\n")
     cat("+--------------------------------------------------------------------------------------------------+\n")
     cat("\n")
+    gc()
+
+    cat("Checking available RAM...\n")
+    if (round(ps::ps_system_memory()$total / 1024^3, 0) < 4) {
+        cat("<!> Warning - The required 4GB of RAM is not available for pipeline to launch.\n")
+        clear_mem <- readline("This will clear the current R environment, excepted 'drias_table' and 'topography' objects. Do you accept? (y/n): ")
+        while (toupper(clear_mem) != "y" && toupper(clear_mem) != "n") {
+            cat("Incorrect input, you must answer by yes (y) or no (n). Try again.\n")
+            clear_mem <- readline("(y/n): ")
+        }
+
+        if (clear_mem == "y") {
+            cat("The current R environment will be cleared.\n")
+            env <- ls(envir = .GlobalEnv)
+            env <- setdiff(env, c("drias_table", "topography"))
+            rm(env)
+            gc()
+            cat("The current R environment has been correctly cleared.\n")
+
+            if (round(ps::ps_system_memory()$total / 1024^3, 0) < 4) {
+                stop("!! ERROR - The required 4GB of RAM is still not available for pipeline to launch, even after a complete R environment clearing. The code will abort.")
+            } else {
+                cat("The required 4GB of RAM is now available for pipeline to launch.")
+            }
+            
+        } else {
+            stop("The pipeline couldn't be launch due to insufficient RAM. Please clear some space first.\n")
+        }
+    }
+
+    cat("Checking data compatibility...\n")
+    if (terra::ext(topography$alt) < terra::ext(terra::vect(drias_table, geom = c("X93", "Y93"), crs = terra::crs(topography))) + 250) {
+        stop("!! ERROR - The input DEM in the `topo_comp()` function is smaller than the ROI + the 250m required buffer.\n")
+    }
 
     drias_table <- phloem_rm(drias_table)
     cat("\n")

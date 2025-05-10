@@ -49,7 +49,7 @@ devtools::install_github("colinfabre/b2spm")
 B2SPM relies on several other packages to function; make sure to download them beforehand to ensure proper operation:
 
 ```r
-install.packages("utils", "stats", "terra", "sf", "gstat")
+install.packages("utils", "stats", "terra", "sf", "gstat", "ps")
 ```
 
 There are no specific package versions required.
@@ -103,7 +103,7 @@ Data downloaded from DRIAS-2020 must be provided as `.txt` files (native format)
 Example of an expected DRIAS file structure:
 
 ```r
-point_id, lambertx, lamberty,date,tmin,tmax,tmoy,tot_pr,spec_hum,vis_solrad,ir_solrad,wind,pet
+point_id, X_LambII, Y_LambII,date,tmin,tmax,tmoy,tot_pr,spec_hum,vis_solrad,ir_solrad,wind,pet
 ID001,908000,2129000,01/01/2030,-2.3,5.7,1.5,0.0,0.0025,150.0,220.0,2.1,0.0
 ID001,908000,2129000,02/01/2030,-1.8,6.2,2.1,0.0001,0.0024,152.5,225.0,1.8,0.00005
 ```
@@ -119,6 +119,9 @@ ID001,908000,2129000,02/01/2030,-1.8,6.2,2.1,0.0001,0.0024,152.5,225.0,1.8,0.000
 `drias_reader(drias_txt_path)` or `drias_fetcher(topography, year)`: Reads downloaded DRIAS data or fetches DRIAS database corresponding to the specified year and study area.
 
 **`pipeline(topography, drias_table)`: Runs the complete B2SPM pipeline on the study area from the radiative model computation to the risk index calculation.**
+
+
+## Models
 
 ### Radiative Model for Sub-Phloem Temperature
 

@@ -12,7 +12,8 @@ Imports:
     stats,
     terra,
     sf,
-    gstat
+    gstat,
+    ps
 Suggests:
     knitr,
     rmarkdown

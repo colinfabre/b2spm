@@ -7,7 +7,7 @@
 topo_comp(dem)
 }
 \arguments{
-\item{dem}{A raster (preferably a SpatRaster in EPSG:2154) representing elevation, covering the entire study area plus a 5-pixel buffer, at a 25m-pixel spatial resolution. It has to be located within the French alpine arc (see README.md for further information).}
+\item{dem}{A raster (preferably a SpatRaster in EPSG:2154) representing elevation, at a 25m-pixel spatial resolution, covering the entire study area plus a 10-pixel buffer (ie 250m). It has to be located within the French alpine arc (see README.md for further information).}
 }
 \value{
 A raster stack containing the spruce forest mask and each topographic raster in a separate band.

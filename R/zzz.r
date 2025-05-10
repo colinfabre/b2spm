@@ -5,7 +5,7 @@
   packageStartupMessage("|##################################################################################################|")
   packageStartupMessage("|-------------------------------------- Dependencies checking -------------------------------------|")
 
-  required_pkgs <- c("utils", "stats", "terra", "sf", "gstat")
+  required_pkgs <- c("utils", "stats", "terra", "sf", "gstat", "ps")
   missing_pkgs <- required_pkgs[!sapply(required_pkgs, requireNamespace, quietly = TRUE)]
   if (length(missing_pkgs) == 0) {
     packageStartupMessage("|-------------------------------------- Dependencies -- ready -------------------------------------|")
