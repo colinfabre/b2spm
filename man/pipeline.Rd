@@ -16,7 +16,7 @@ pipeline(topography, drias_table, return_tables = FALSE, precision = 1)
 \item{precision}{The level of computation precision of the `pcc()` function. See the `precision` paramater in the `ppc()` function documentation for more details.}
 }
 \value{
-A raster stack containing the spatialized phenological indicators (`awakening_doy`, `swarming_doy`, `maturing_doy`), the attack risk (`Rpheno`), and the maximum number of generations per year (`max_gen`).
+A list of the raster stack containing the spatialized phenological indicators (`awakening_doy`, `swarming_doy`, `maturing_doy`), the attack risk (`Rpheno`), and the maximum number of generations per year (`max_gen`), and the intermediate phenological tables if `return_tables = TRUE`.
 }
 \description{
 Runs the entire B2SPM pipeline, from computing under-phloem temperatures to spatializing the attack risk.

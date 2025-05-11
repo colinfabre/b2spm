@@ -818,7 +818,7 @@ rpc <- function(spat_ind) {
 #' @param drias_table The DRIAS table processed either by the drias_reader() or the drias_fetcher() function.
 #' @param return_tables Whether the intermediate phenological tables (`awakening_table`, `swarming_table` and `maturing_table`) should be returned as ouputs of the pipeline or not.
 #' @param precision The level of computation precision of the `pcc()` function. See the `precision` paramater in the `ppc()` function documentation for more details.
-#' @return A raster stack containing the spatialized phenological indicators (`awakening_doy`, `swarming_doy`, `maturing_doy`), the attack risk (`Rpheno`), and the maximum number of generations per year (`max_gen`).
+#' @return A list of the raster stack containing the spatialized phenological indicators (`awakening_doy`, `swarming_doy`, `maturing_doy`), the attack risk (`Rpheno`), and the maximum number of generations per year (`max_gen`), and the intermediate phenological tables if `return_tables = TRUE`.
 #' @examples
 #' \dontrun{
 #'  results <- pipeline(topography, drias_table)
@@ -831,6 +831,19 @@ pipeline <- function(topography, drias_table, return_tables = FALSE, precision =
     cat("+--------------------------------------------------------------------------------------------------+\n")
     cat("\n")
     gc()
+
+    if (!inherits(topography, "SpatRaster") && any(names(topography) != c("spruce_forests", "alt", "slope", "aspect", "tpi"))) {
+        stop("!! ERROR - 'topography' is invalid. It must necessarily be the result of the topo_comp() function.")
+    }
+    if (!inherits(drias_table, "data.frame") && any(names(drias_table) != c("id", "X93", "Y93", "date", "doy", "tmin", "tmax", "tmean", "tot_pr", "spec_hum", "vis_solrad", "ir_solrad", "wind", "pet"))) {
+        stop("!! ERROR - 'drias_table' is invalid. It must necessarily be the result of the drias_reader() or drias_fetcher() function.")
+    }
+    if (!is.logical(return_tables)) {
+        stop("!! ERROR - 'return_tables' must be TRUE or FALSE.")
+    }
+    if (precision != 1 && precision != 2 && precision != 3) {
+        stop("!! ERROR - 'precision' must be set to 1, 2 or 3.")
+    }
 
     cat("Checking available RAM...\n")
     if (round(ps::ps_system_memory()$total / 1024^3, 0) < 4) {
@@ -858,6 +871,9 @@ pipeline <- function(topography, drias_table, return_tables = FALSE, precision =
         } else {
             stop("The pipeline couldn't be launch due to insufficient RAM. Please clear some space first.\n")
         }
+    } else {
+        cat("Available RAM -- OK\n")
+        cat("\n")
     }
 
     cat("Checking data compatibility...\n")
@@ -882,6 +898,7 @@ pipeline <- function(topography, drias_table, return_tables = FALSE, precision =
     cat("\n")
 
     hsi_table <- hsc(drias_table)
+    cat("\n")
 
     spat_ind <- kpi(awakening_table, swarming_table, maturing_table, hsi_table, topography)
     cat("\n")
