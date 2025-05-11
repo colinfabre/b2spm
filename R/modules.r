@@ -631,7 +631,7 @@ maturing <- function(drias_table, swarming_table, topography) {
 #' @export
 hsc <- function(drias_table) {
     cat("===== HYDRAULIC STRESS COMPUTER =====\n")
-    # awc_max <- terra::rast(system.file("extdata/awc_max.tif", package = "b2spm"))
+    awc_max <- terra::rast(system.file("extdata/awc_max.tif", package = "b2spm"))
     terra::crs(awc_max) <- "EPSG:2154"
 
     stations <- unique(drias_table$id)
