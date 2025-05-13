@@ -799,8 +799,9 @@ rpc <- function(spat_ind) {
     prob_maturing <- (-0.0032 * spat_ind$maturing_doy) + 1.1699
     prob_hsi <- spat_ind$hsi
 
-    rpheno <- pmax(round(prob_awakening * prob_swarming * prob_maturing * prob_hsi, 2), 1)
-    rpheno[rpheno < 0] <- 0
+    rpheno <- terra::rast(spat_ind$awakening_doy)
+    terra::values(rpheno) <- round(terra::values(prob_awakening) * terra::values(prob_swarming) * terra::values(prob_maturing) * terra::values(prob_hsi), 2)
+    rpheno <- terra::clamp(rpheno, lower = 0, upper = 1, values = TRUE)
     names(rpheno) <- "Rpheno"
 
     cat("== Rpheno CALCULATION -- OK ==\n")
