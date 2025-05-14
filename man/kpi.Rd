@@ -21,7 +21,7 @@ kpi(awakening_table, swarming_table, maturing_table, hsi_table, topography)
 A raster stack containing the interpolated phenological indicators and hydraulic stress index, restricted to pure spruce forests.
 }
 \description{
-This function spatializes phenological indicators (`awakening_doy`, `swarming_doy`, `maturing_doy`) and hydraulic stress index (`hsi`) using IDW or ordinary kriging with an auto-fitted exponential model, depending on the number of DRIAS points present in the study area.
+This function spatializes phenological indicators (`awakening_doy`, `swarming_doy`, `maturing_doy`) and hydraulic stress index (`hsi`) using IDW (nmax = 8 and idp = 2).
 }
 \examples{
 \dontrun{

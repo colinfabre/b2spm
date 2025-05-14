@@ -500,7 +500,7 @@ swarming <- function(drias_table, awakening_table, topography) {
         station_data <- drias_table[drias_table$id == station, ]
         awakening_day <- awakening_table$awakening_doy[awakening_table$id == station]
 
-        swarming_day <- max(min(station_data$doy[station_data$doy > awakening_day & station_data$tmean >= 16.11 & station_data$tmax <= 31.29]), awakening_day + 1)
+        swarming_day <- max(min(station_data$doy[station_data$doy > awakening_day & station_data$tmean >= 15 & station_data$tmax <= 30 & station_data$tot_pr == 0 & station_data$wind < 3]), awakening_day + 1)
         if (awakening_day == 0) {
             swarming_day <- 0
             cat(paste0("<!> Warning - swarming() returned a 0-doy for station ", station, " meaning adult bark-beetles won't swarm this year.\n"))
@@ -695,7 +695,7 @@ hsc <- function(drias_table) {
 
 #' kpi
 #'
-#' This function spatializes phenological indicators (`awakening_doy`, `swarming_doy`, `maturing_doy`) and hydraulic stress index (`hsi`) using IDW or ordinary kriging with an auto-fitted exponential model, depending on the number of DRIAS points present in the study area.
+#' This function spatializes phenological indicators (`awakening_doy`, `swarming_doy`, `maturing_doy`) and hydraulic stress index (`hsi`) using IDW (nmax = 8 and idp = 2).
 #'
 #' @param awakening_table The data.frame returned by the awakening() function.
 #' @param swarming_table The data.frame returned by the swarming() function.
@@ -722,56 +722,27 @@ kpi <- function(awakening_table, swarming_table, maturing_table, hsi_table, topo
     grid_sf <- sf::st_as_sf(grid_df, coords = c("x", "y"), crs = 2154)
     spat_ind <- terra::rast()
 
-    if (length(data$id) < 50) {
-        cat("<!> Warning - The number of DRIAS points is not enough to fit a semi-variogram and proceed to a kriging spatialization.\n")
-        cat("<!> Warning - An IDW algorithm is used instead.\n")
-        idw_spationer <- function(var) {
-            formula <- stats::as.formula(paste(var, "~1"))
+    idw_spationer <- function(var) {
+        formula <- stats::as.formula(paste(var, "~1"))
 
-            idw_result <- gstat::idw(formula = formula, locations = data_sf, newdata = grid_sf, idp = 2, nmax = 8, debug.level = -1)
-            idw_df <- cbind(sf::st_coordinates(idw_result), idw_result$var1.pred)
-            colnames(idw_df) <- c("x", "y", var)
+        idw_result <- gstat::idw(formula = formula, locations = data_sf, newdata = grid_sf, idp = 2, nmax = 8, debug.level = -1)
+        idw_df <- cbind(sf::st_coordinates(idw_result), idw_result$var1.pred)
+        colnames(idw_df) <- c("x", "y", var)
 
-            idwed_ind <- terra::rast(idw_df, type = "xyz", crs = terra::crs(grid))
-            idwed_ind <- terra::resample(idwed_ind, grid, method = "near")
-            idwed_ind[is.na(terra::resample(topography$spruce_forests, grid, method = "near"))] <- NA
-            idwed_ind[idwed_ind < 0] <- 0
-            if (var != "hsi") {
-              terra::values(idwed_ind) <- ceiling(terra::values(idwed_ind)) 
-            }
-            names(idwed_ind) <- var
-
-            return(idwed_ind)
+        idwed_ind <- terra::rast(idw_df, type = "xyz", crs = terra::crs(grid))
+        idwed_ind <- terra::resample(idwed_ind, grid, method = "near")
+        idwed_ind[is.na(terra::resample(topography$spruce_forests, grid, method = "near"))] <- NA
+        idwed_ind[idwed_ind < 0] <- 0
+        if (var != "hsi") {
+            terra::values(idwed_ind) <- ceiling(terra::values(idwed_ind)) 
         }
+        names(idwed_ind) <- var
 
-        idwed_vars <- lapply(vars, idw_spationer)
-        spat_ind <- do.call(c, idwed_vars)
+        return(idwed_ind)
     }
 
-    if (length(data$id) >= 50) {
-        cat("<!> Warning - The number of DRIAS points is enough to fit a semi-variogram and proceed to a kriging spatialization.\n")
-        krig_spationer <- function(var) {
-            formula <- stats::as.formula(paste(var, "~1"))
-            vgm_model <- gstat::variogram(formula, data = data_sf)
-            vgm_fit <- gstat::fit.variogram(vgm_model, gstat::vgm("Exp", range = 500, nugget = NA, psill = NA), debug.level = -1)
-
-            krig_result <- gstat::krige(formula = formula, locations = data_sf, newdata = grid_sf, model = vgm_fit, nmax = 8, debug.level = -1)
-            krig_df <- cbind(sf::st_coordinates(krig_result), krig_result$var1.pred)
-            colnames(krig_df) <- c("x", "y", var)
-
-            kriged_ind <- terra::rast(krig_df, type = "xyz", crs = terra::crs(grid))
-            kriged_ind <- terra::resample(kriged_ind, grid, method = "near")
-            kriged_ind[is.na(topography$spruce_forests)] <- NA
-            kriged_ind[kriged_ind < 0] <- 0
-            terra::values(kriged_ind) <- ceiling(terra::values(kriged_ind))
-            names(kriged_ind) <- var
-
-            return(kriged_ind)
-        }
-
-        kriged_vars <- lapply(vars, krig_spationer)
-        spat_ind <- do.call(c, kriged_vars)
-    }
+    idwed_vars <- lapply(vars, idw_spationer)
+    spat_ind <- do.call(c, idwed_vars)
 
     cat("== INDICATORS SPATIALISATION -- OK ==\n")
     cat("==================================================\n")
