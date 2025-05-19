@@ -24,5 +24,5 @@ plot(results_chablais$rpheno, main = "Epidemic Risk Map")
 ```
 
 <p align="center">
-  <img src="figures/exemple.png" width="200" height="145">
+  <img src="/figures/exemple.png" width="200" height="145">
 </p>
