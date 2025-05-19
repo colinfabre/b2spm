@@ -1,0 +1,12 @@
+/* Coding Blocs */
+pre {
+  background-color: #f4f4f4;
+  padding: 1em;
+  border-radius: 5px;
+  overflow-x: auto;
+}
+
+/* R Code Blocs */
+.language-r {
+  background-color: #f4f4f4 !important;
+}

@@ -12,6 +12,6 @@ It enables the analysis of bark beetle epidemiology for the current period (curr
 The model is based on a minimum computational and interpretation grid. The computational grid is constrained by the systematic spacing of DRIAS points (8 km), which are pseudo-randomly distributed across France. The interpretation grid is set at 250 m to account for the spatialization accuracy limits of the indicators and the intra-valley/forest massif variability, which is difficult to model at a finer scale. Therefore, a probable attack should only be assessed at this spatial scale.
 
 <p align="center">
-  <img src="figures/roi.png" width="200" height="116"><br>
+  <img src="/figures/roi.png" width="200" height="116"><br>
   <em style="font-size: 8pt;">Map of Spruce Forests in the French Alpine Arc. BDFORÊTV2, IGN 2025; OSM 2025</em>
 </p>
