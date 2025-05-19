@@ -3,26 +3,57 @@
 <head>
   <meta charset="UTF-8">
   <title>{{ page.title }}</title>
+
+  <!-- CSS -->
   <link rel="stylesheet" href="/assets/style.css">
+
+  <!-- KaTeX (maths) -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.10/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.10/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.10/dist/contrib/auto-render.min.js"
+          onload="renderMathInElement(document.body, {
+            delimiters: [
+              {left: '$$', right: '$$', display: true},
+              {left: '$', right: '$', display: false}
+            ]
+          });"></script>
+
+  <!-- Menu Style -->
+  <style>
+    nav ul {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      gap: 1.5em;
+    }
+    nav ul li a {
+      text-decoration: none;
+      color: #333;
+      font-weight: bold;
+    }
+    nav ul li a:hover {
+      color: #007acc;
+    }
+    nav {
+      background: #f8f9fa;
+      padding: 1em 2em;
+      border-bottom: 1px solid #ddd;
+    }
+  </style>
 </head>
-<style>
-  nav ul li a {
-  text-decoration: none;
-  color: #333;
-  font-weight: bold;
-  }
-  nav ul li a:hover {
-  color: #007acc;
-  }
-</style>
-<script src="https://unpkg.com/medium-zoom@1.0.6/dist/medium-zoom.min.js"></script>
-<script>
-  mediumZoom('img', { margin: 24, background: '#000' });
-</script>
+
 <body>
   {% include header.html %}
+
   <main>
     {{ content }}
   </main>
+
+  <!-- Images Zoom -->
+  <script src="https://unpkg.com/medium-zoom@1.0.6/dist/medium-zoom.min.js"></script>
+  <script>
+    mediumZoom('img', { margin: 24, background: '#000' });
+  </script>
 </body>
 </html>
