@@ -5,6 +5,20 @@
   <title>{{ page.title }}</title>
   <link rel="stylesheet" href="/assets/style.css">
 </head>
+<style>
+  nav ul li a {
+  text-decoration: none;
+  color: #333;
+  font-weight: bold;
+  }
+  nav ul li a:hover {
+  color: #007acc;
+  }
+</style>
+<script src="https://unpkg.com/medium-zoom@1.0.6/dist/medium-zoom.min.js"></script>
+<script>
+  mediumZoom('img', { margin: 24, background: '#000' });
+</script>
 <body>
   {% include header.html %}
   <main>

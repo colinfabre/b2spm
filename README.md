@@ -301,6 +301,8 @@ SPENCER, J. W. *Fourier series representation of the position of the sun*, Searc
 
 AMMAN, G. D. *Population changes of the mountain pine beetle in relation to elevation*, Environmental Entomology, 1973. [CrossRef](https://doi.org/10.1093/ee/2.4.541)
 
+FORSEE, E. et al. *Migration in the bark beetle Ips typographys L.: duration, timing and height of flight*, Journal of Applied Entomology, 1985. [CrossRef](https://doi.org/10.1111/j.1439-0418.1985.tb02756.x)
+
 BENTZ, B. J., MULLINS, D. E. *Ecology of mountain pine beetle cold hardening in the field: Interactions between cold and subcortical beetle behavior*, Environmental Entomology, 1999. [CrossRef](https://doi.org/10.1093/ee/28.4.577)
 
 HANSEN, E. M., BENTZ, B. J. *Comparison of reproductive capacity among univoltine, semivoltine, and re-emerged parent mountain pine beetle (Coleoptera: Scolytidae) populations*, The Canadian Entomologist, 2003. [CrossRef](https://doi.org/10.4039/n02-109)
