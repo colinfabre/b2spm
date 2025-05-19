@@ -880,8 +880,10 @@ pipeline <- function(topography, drias_table, return_tables = FALSE, precision =
 
     if (return_tables == FALSE) {
         results <- list(spat_ind, rpheno)
+        names(results) <- c("spat_ind", "rpheno")
     } else {
         results <- list(awakening_table, swarming_table, maturing_table, hsi_table, spat_ind, rpheno)
+        names(results) <- c("awakening_table", "swarming_table", "maturing_table", "hsi_table", "spat_ind", "rpheno")
     }
 
     cat("\n")
