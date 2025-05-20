@@ -342,13 +342,7 @@ ppc <- function(drias_table, topography, precision = 1) {
                         )
                         solar_azimuth <- (solar_azimuth * 180 / pi) %% 360
 
-                        terra::values(cum_cshd) <- terra::values(cum_cshd) +
-                            terra::values(terra::shade(
-                                slope = topography$slope,
-                                aspect = topography$aspect,
-                                angle = solar_angle,
-                                direction = solar_azimuth
-                            ))
+                        terra::values(cum_cshd) <- terra::values(cum_cshd) + terra::values(terra::shade(slope = topography$slope, aspect = topography$aspect, angle = solar_angle, direction = solar_azimuth))
 
                         cum_cshd <- terra::clamp(cum_cshd, lower = 0, values = TRUE)
                         i <- i + 1
@@ -804,6 +798,8 @@ pipeline <- function(topography, drias_table, return_tables = FALSE, precision =
     cat("\n")
     gc()
 
+    start_time <- Sys.time()
+
     if (!inherits(topography, "SpatRaster") && any(names(topography) != c("spruce_forests", "alt", "slope", "aspect", "tpi"))) {
         stop("!! ERROR - 'topography' is invalid. It must necessarily be the result of the topo_comp() function.")
     }
@@ -885,6 +881,10 @@ pipeline <- function(topography, drias_table, return_tables = FALSE, precision =
         results <- list(awakening_table, swarming_table, maturing_table, hsi_table, spat_ind, rpheno)
         names(results) <- c("awakening_table", "swarming_table", "maturing_table", "hsi_table", "spat_ind", "rpheno")
     }
+
+    end_time <- Sys.time()
+    process_time <- end_time - start_time
+    cat(paste0("Processing time: ", process_time, "\n"))
 
     cat("\n")
     cat("+--------------------------------------------------------------------------------------------------+\n")

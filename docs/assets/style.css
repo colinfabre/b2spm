@@ -1,17 +1,4 @@
-/* Coding Blocs */
-pre {
-  background-color: #f4f4f4;
-  padding: 1em;
-  border-radius: 5px;
-  overflow-x: auto;
-}
-
-/* R Code Blocs */
-.language-r {
-  background-color: #f4f4f4 !important;
-}
-
-/* Navigation Bar Logo */
+/* Navigation Bar */
 nav ul {
   display: flex;
   align-items: center;
@@ -30,12 +17,67 @@ nav ul li.logo img {
   cursor: pointer;
 }
 
-/* No Zoom on Logo */
 nav ul li.logo img[data-zoomable="false"] {
   pointer-events: auto;
 }
 
-/* No Medium Zoom on Logo */
 nav ul li.logo img {
   zoom: reset;
+}
+
+/* Code Block Container */
+.code-block {
+  position: relative;
+  margin-top: 1.5em;
+  background: #f6f8fa;
+  border: 1px solid #d0d7de;
+  border-radius: 6px;
+  overflow: auto;
+}
+
+/* Copy Button */
+.copy-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  padding: 4px 8px;
+  font-size: 0.75rem;
+  background: #eaeef2;
+  border: 1px solid #cbd2d9;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.copy-btn:hover {
+  background: #d0d7de;
+}
+
+/* Code Styling */
+pre code {
+  font-family: "Courier New", Courier, monospace;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  white-space: pre-wrap;
+}
+
+/* Line Numbers */
+pre.line-numbers {
+  position: relative;
+  padding-left: 3.5em;
+}
+
+.line-numbers .line-numbers-rows {
+  position: absolute;
+  pointer-events: none;
+  top: 0;
+  font-size: 100%;
+  left: 0;
+  width: 3em;
+  letter-spacing: -1px;
+  border-right: 1px solid #d0d7de;
+  user-select: none;
+  padding: 0.5em 0;
+  text-align: right;
+  color: #999;
 }

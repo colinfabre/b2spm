@@ -4,8 +4,6 @@ title: Usage Exemple
 permalink: /exemple/
 ---
 
-# Usage Example
-
 ```r
 library(b2spm)
 dem_chablais <- rast("mnt_chablais.tif")

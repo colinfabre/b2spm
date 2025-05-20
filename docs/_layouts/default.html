@@ -21,35 +21,49 @@
       ]
     });"></script>
 
-  <!-- Menu Style -->
+  <!-- Global Font -->
   <style>
-    nav {
-      background: #f8f9fa;
-      padding: 1em 2em;
-      border-bottom: 1px solid #ddd;
-    }
-    nav ul {
-      list-style: none;
-      margin: 0;
-      padding: 0;
-      display: flex;
-      align-items: center;
-      gap: 1.5em;
-    }
-    nav ul li a {
-      text-decoration: none;
-      color: #333;
-      font-weight: bold;
-    }
-    nav ul li a:hover {
-      color: #007acc;
-    }
-    nav ul li.logo img {
-      height: 40px;
-      vertical-align: middle;
+    body {
+      font-family: "Times New Roman", Times, serif;
     }
   </style>
+
+  <!-- PrismJS GitHub theme with line numbers -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/line-numbers/prism-line-numbers.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-python.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-r.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-bash.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/line-numbers/prism-line-numbers.min.js"></script>
 </head>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('pre').forEach((preBlock) => {
+      const code = preBlock.querySelector('code');
+      if (!code) return;
+
+      const wrapper = document.createElement('div');
+      wrapper.className = 'code-block';
+
+      const button = document.createElement('button');
+      button.className = 'copy-btn';
+      button.textContent = 'Copier';
+
+      button.addEventListener('click', () => {
+        navigator.clipboard.writeText(code.textContent).then(() => {
+          button.textContent = 'Copié !';
+          setTimeout(() => { button.textContent = 'Copier'; }, 2000);
+        });
+      });
+
+      preBlock.parentNode.insertBefore(wrapper, preBlock);
+      wrapper.appendChild(preBlock);
+      wrapper.appendChild(button);
+    });
+  });
+</script>
 
 <body>
   {% include header.html %}
