@@ -9,7 +9,7 @@ The **B2SPM** package models the development and spread of the bark beetle in sp
 
 It enables the analysis of bark beetle epidemiology for the current period (current year, for monitoring) or the future (to anticipate attack risks and adapt forest management strategies).
 
-The model is based on a minimum computational and interpretation grid. The computational grid is constrained by the systematic spacing of DRIAS points (8 km), which are pseudo-randomly distributed across France. The interpretation grid is set at 250 m to account for the spatialization accuracy limits of the indicators and the intra-valley/forest massif variability, which is difficult to model at a finer scale. Therefore, a probable attack should only be assessed at this spatial scale.
+The model is based on a minimum computational and interpretation grid. The computational grid is constrained by the systematic spacing of DRIAS points (8km), which are pseudo-randomly distributed across France. The interpretation grid is set at 250m to account for the spatialization accuracy limits of the indicators and the intra-valley/forest massif variability, which is difficult to model at a finer scale. Therefore, a probable attack should only be assessed at this spatial scale.
 
 <p align="center">
   <img src="/figures/roi.png" width="200" height="116"><br>
