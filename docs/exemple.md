@@ -20,9 +20,9 @@ drias_chablais_2050 <- drias_fetcher(topography, year = 2050)
 results_chablais <- pipeline(drias_table = drias_chablais_2050, topography = topo_chablais)
 
 # Displays the epidemic risk map
-plot(results_chablais$rpheno, main = "Epidemic Risk Map")
+plot(results_chablais$rpheno)
 ```
 
 <p align="center">
-  <img src="/figures/exemple.png" width="200" height="145">
+  <img src="/figures/exemple.png" width="1000" height="725">
 </p>
