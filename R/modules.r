@@ -449,7 +449,7 @@ awakening <- function(drias_table, topography) {
         csi_table$csi <- csi_table$vis_solrad + csi_table$ir_solrad
         topo_table <- stats::aggregate(cbind(alt, aspect) ~ id, data = station_data, stats::median, na.rm = TRUE)
         csi_table <- merge(csi_table, topo_table, by = "id")
-        csi_table$csi_adj <- pmax(round(csi_table$csi * cos(csi_table$aspect * pi / 180) * (1 - (csi_table$alt / 3500)), 2), 0)
+        csi_table$csi_adj <- pmax(round(csi_table$csi * cos(csi_table$aspect * pi / 180) * (1 - (csi_table$alt / 3500)), 0), 0)
         csi_table$csi_adj_log <- log1p(csi_table$csi_adj)
 
         awakening_day <- ceiling(awakening_day * exp(0.05 * csi_table$csi_adj_log))
@@ -557,14 +557,14 @@ maturing <- function(drias_table, swarming_table, topography) {
             csi_table$csi <- csi_table$vis_solrad + csi_table$ir_solrad
             topo_table <- stats::aggregate(cbind(alt, aspect) ~ id, data = topomod_data, stats::median, na.rm = TRUE)
             csi_table <- merge(csi_table, topo_table, by = "id")
-            csi_table$csi_adj <- pmax(round(csi_table$csi * cos(csi_table$aspect * pi / 180) * (1 - (csi_table$alt / 3500)), 2), 0)
+            csi_table$csi_adj <- pmax(round(csi_table$csi * cos(csi_table$aspect * pi / 180) * (1 - (csi_table$alt / 3500)), 0), 0)
             csi_table$csi_adj_log <- log1p(csi_table$csi_adj)
 
             mdi_table <- stats::aggregate(cbind(tot_pr, tmean) ~ id, data = topomod_data, sum, na.rm = TRUE)
             mdi_table$pr_t <- mdi_table$tot_pr / mdi_table$tmean
             topo_table <- stats::aggregate(cbind(alt, aspect) ~ id, data = topomod_data, stats::median, na.rm = TRUE)
             mdi_table <- merge(mdi_table, topo_table, by = "id")
-            mdi_table$mdi <- pmax(round(mdi_table$pr_t * cos(mdi_table$aspect * pi / 180) * (1 - (mdi_table$alt / 3500)), 2), 0)
+            mdi_table$mdi <- pmax(round(mdi_table$pr_t * cos(mdi_table$aspect * pi / 180) * (1 - (mdi_table$alt / 3500)), 0), 0)
             mdi_table$mdi_log <- log1p(mdi_table$mdi)
 
             maturing_day <- ceiling(maturing_day * exp(0.005 * csi_table$csi_adj_log * mdi_table$mdi_log))

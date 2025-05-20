@@ -49,12 +49,12 @@
 
       const button = document.createElement('button');
       button.className = 'copy-btn';
-      button.textContent = 'Copier';
+      button.textContent = 'Copy';
 
       button.addEventListener('click', () => {
         navigator.clipboard.writeText(code.textContent).then(() => {
-          button.textContent = 'Copié !';
-          setTimeout(() => { button.textContent = 'Copier'; }, 2000);
+          button.textContent = 'Copied!';
+          setTimeout(() => { button.textContent = 'Copy'; }, 2000);
         });
       });
 
