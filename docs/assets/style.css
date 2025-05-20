@@ -4,7 +4,7 @@ nav ul {
   align-items: center;
   list-style: none;
   padding: 0;
-  background-color: #ffffff;
+  background-color: #f8f8f8;
   margin: 0;
 }
 
@@ -15,24 +15,36 @@ nav ul li {
 nav ul li.logo img {
   height: 40px;
   cursor: pointer;
-}
-
-nav ul li.logo img[data-zoomable="false"] {
   pointer-events: auto;
 }
 
-nav ul li.logo img {
-  zoom: reset;
+nav ul li a {
+  text-decoration: none;
+  color: inherit;
+}
+
+nav ul li a:hover {
+  color: #8f754f;
+}
+
+nav ul li a:visited {
+  color: inherit;
 }
 
 /* Code Block Container */
 .code-block {
   position: relative;
   margin-top: 1.5em;
-  background: #f6f8fa;
+  background: #F0F0F0;
   border: 1px solid #d0d7de;
   border-radius: 6px;
   overflow: auto;
+}
+
+/* Code Font */
+pre code {
+  font-family: "Courier New", monospace;
+  font-size: 1em;
 }
 
 /* Copy Button */
@@ -48,36 +60,6 @@ nav ul li.logo img {
   cursor: pointer;
   transition: background 0.2s;
 }
-
 .copy-btn:hover {
   background: #d0d7de;
-}
-
-/* Code Styling */
-pre code {
-  font-family: "Courier New", Courier, monospace;
-  font-size: 0.7rem;
-  line-height: 1.4;
-  white-space: pre-wrap;
-}
-
-/* Line Numbers */
-pre.line-numbers {
-  position: relative;
-  padding-left: 3.5em;
-}
-
-.line-numbers .line-numbers-rows {
-  position: absolute;
-  pointer-events: none;
-  top: 0;
-  font-size: 100%;
-  left: 0;
-  width: 3em;
-  letter-spacing: -1px;
-  border-right: 1px solid #d0d7de;
-  user-select: none;
-  padding: 0.5em 0;
-  text-align: right;
-  color: #999;
 }

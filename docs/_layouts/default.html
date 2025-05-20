@@ -21,49 +21,40 @@
       ]
     });"></script>
 
-  <!-- Global Font -->
-  <style>
-    body {
-      font-family: "Times New Roman", Times, serif;
-    }
-  </style>
-
-  <!-- PrismJS GitHub theme with line numbers -->
+  <!-- PrismJS GitHub theme -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism.css">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/line-numbers/prism-line-numbers.min.css">
   <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-python.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-r.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-bash.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/line-numbers/prism-line-numbers.min.js"></script>
-</head>
 
-<script>
-  document.addEventListener('DOMContentLoaded', () => {
-    document.querySelectorAll('pre').forEach((preBlock) => {
-      const code = preBlock.querySelector('code');
-      if (!code) return;
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      document.querySelectorAll('pre').forEach((preBlock) => {
+        const code = preBlock.querySelector('code');
+        if (!code) return;
 
-      const wrapper = document.createElement('div');
-      wrapper.className = 'code-block';
+        const wrapper = document.createElement('div');
+        wrapper.className = 'code-block';
 
-      const button = document.createElement('button');
-      button.className = 'copy-btn';
-      button.textContent = 'Copy';
+        const button = document.createElement('button');
+        button.className = 'copy-btn';
+        button.textContent = 'Copy';
 
-      button.addEventListener('click', () => {
-        navigator.clipboard.writeText(code.textContent).then(() => {
-          button.textContent = 'Copied!';
-          setTimeout(() => { button.textContent = 'Copy'; }, 2000);
+        button.addEventListener('click', () => {
+          navigator.clipboard.writeText(code.textContent).then(() => {
+            button.textContent = 'Copied!';
+            setTimeout(() => { button.textContent = 'Copy'; }, 2000);
+          });
         });
-      });
 
-      preBlock.parentNode.insertBefore(wrapper, preBlock);
-      wrapper.appendChild(preBlock);
-      wrapper.appendChild(button);
+        preBlock.parentNode.insertBefore(wrapper, preBlock);
+        wrapper.appendChild(preBlock);
+        wrapper.appendChild(button);
+      });
     });
-  });
-</script>
+  </script>
+</head>
 
 <body>
   {% include header.html %}
