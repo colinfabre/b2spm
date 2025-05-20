@@ -4,8 +4,6 @@ title: Models
 permalink: /models/
 ---
 
-# Models
-
 ## Radiative Model for Sub-Phloem Temperature
 
 The bark beetle hibernates and then digs its egg-laying galleries where larvae mature under the bark of spruce trees. Calculating sub-phloem temperatures is therefore crucial to understanding and accurately modeling the insect's phenological cycle. This temperature is influenced by several factors related to forest structure and environmental conditions:

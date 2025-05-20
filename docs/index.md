@@ -3,8 +3,6 @@ layout: default
 title: B2SPM
 ---
 
-# Introduction
-
 The **B2SPM** package models the development and spread of the bark beetle in spruce forests of the French Alpine arc by integrating topoclimatological data and a spatialized phenological model.
 
 It enables the analysis of bark beetle epidemiology for the current period (current year, for monitoring) or the future (to anticipate attack risks and adapt forest management strategies).

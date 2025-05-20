@@ -10,3 +10,32 @@ pre {
 .language-r {
   background-color: #f4f4f4 !important;
 }
+
+/* Navigation Bar Logo */
+nav ul {
+  display: flex;
+  align-items: center;
+  list-style: none;
+  padding: 0;
+  background-color: #f8f8f8;
+  margin: 0;
+}
+
+nav ul li {
+  margin: 0 1em;
+}
+
+nav ul li.logo img {
+  height: 40px;
+  cursor: pointer;
+}
+
+/* No Zoom on Logo */
+nav ul li.logo img[data-zoomable="false"] {
+  pointer-events: auto;
+}
+
+/* No Medium Zoom on Logo */
+nav ul li.logo img {
+  zoom: reset;
+}

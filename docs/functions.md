@@ -4,8 +4,6 @@ title: Main Functions
 permalink: /functions/
 ---
 
-## Main Functions
-
 ```r
 topo_comp(dem)
 ```

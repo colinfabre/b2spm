@@ -1,4 +1,8 @@
-# References
+---
+layout: default
+title: References
+permalink: /references/
+---
 
 FABRE, C. *ModEpiSco: Modélisation des Épidémies de Scolytes et de l'impact sur les forêts alpines françaises du Nord dans le contexte du changement climatique*, IUGA, 2023. [CrossRef](http://doi.org/10.13140/RG.2.2.14613.91362/2)
 
