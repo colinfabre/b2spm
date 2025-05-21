@@ -31,6 +31,7 @@
 
 <script>
   document.addEventListener('DOMContentLoaded', () => {
+    // Copy button for code blocks
     document.querySelectorAll('pre').forEach((preBlock) => {
       const code = preBlock.querySelector('code');
       if (!code) return;
@@ -52,6 +53,16 @@
       preBlock.parentNode.insertBefore(wrapper, preBlock);
       wrapper.appendChild(preBlock);
       wrapper.appendChild(button);
+    });
+
+    // Open external links in a new tab
+    const currentHost = window.location.hostname;
+    document.querySelectorAll("a[href^='http']").forEach(link => {
+      const linkHost = new URL(link.href).hostname;
+      if (linkHost !== currentHost) {
+        link.setAttribute("target", "_blank");
+        link.setAttribute("rel", "noopener noreferrer");
+      }
     });
   });
 </script>

@@ -4,7 +4,7 @@ nav ul {
   align-items: center;
   list-style: none;
   padding: 0;
-  background-color: #f8f8f8;
+  background-color: #ffffff;
   margin: 0;
 }
 
@@ -47,12 +47,12 @@ nav ul li a:hover {
 .code-block {
   position: relative;
   margin-top: 1.5em;
-  background: #F5F2F0;
+  background: #FAF9F8;
   border: 1px solid #d0d7de;
   border-radius: 6px;
   overflow: auto;
   font-family: "Courier New", monospace;
-  font-size: 1em;
+  font-size: 0.75em;
 }
 
 /* Copy Button */
