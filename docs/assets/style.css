@@ -17,19 +17,14 @@ nav ul li.logo img {
   cursor: pointer;
 }
 
-/* No Medium Zoom on Logo */
-nav ul li.logo img[data-zoomable="false"] {
-  pointer-events: auto;
-}
-
 /* Link Styles (Body) */
 a {
-  color: #1A0DAB;
+  color: #1a0dab;
   text-decoration: none;
 }
 
 a:hover {
-  color: #8F754F;
+  color: #1a0dab;
   text-decoration: underline;
 }
 
@@ -45,13 +40,14 @@ nav ul li a {
 
 nav ul li a:hover {
   color: #8F754F;
+  text-decoration: none;
 }
 
 /* Code Block Container */
 .code-block {
   position: relative;
   margin-top: 1.5em;
-  background: #F0F0F0;
+  background: #F5F2F0;
   border: 1px solid #d0d7de;
   border-radius: 6px;
   overflow: auto;
