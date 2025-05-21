@@ -30,6 +30,7 @@ a:hover {
 
 a:visited {
   color: #1A0DAB;
+  text-decoration: none;
 }
 
 /* Navigation Bar Links */
@@ -52,14 +53,15 @@ nav ul li a:hover {
   border-radius: 6px;
   overflow: auto;
   font-family: "Courier New", monospace;
-  font-size: 0.85em;
+  font-size: 0.9em;
 }
 
 /* Copy Button */
 .copy-btn {
   position: absolute;
-  top: 21px;
+  top: 50%;
   right: 8px;
+  transform: translateY(-50%);
   padding: 4px 8px;
   font-size: 0.85rem;
   background: #eaeef2;
@@ -71,4 +73,9 @@ nav ul li a:hover {
 
 .copy-btn:hover {
   background: #d0d7de;
+}
+
+/* Override PrismJS default background */
+pre[class*="language-"], code[class*="language-"] {
+  background: #FAF9F8 !important;
 }
