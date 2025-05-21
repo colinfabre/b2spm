@@ -1,37 +1,54 @@
 /* Navigation Bar */
+nav {
+  background: #f8f9fa;
+  padding: 1em 2em;
+  border-bottom: 1px solid #ddd;
+}
 nav ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
   display: flex;
   align-items: center;
-  list-style: none;
-  padding: 0;
-  background-color: #f8f8f8;
-  margin: 0;
+  gap: 1.5em;
 }
-
-nav ul li {
-  margin: 0 1em;
-}
-
-nav ul li.logo img {
-  height: 40px;
-  cursor: pointer;
-  pointer-events: auto;
-}
-
 nav ul li a {
   text-decoration: none;
-  color: inherit;
+  color: #333;
+  font-weight: bold;
 }
-
 nav ul li a:hover {
   color: #8f754f;
 }
-
 nav ul li a:visited {
+  color: #333;
+}
+nav ul li.logo img {
+  height: 40px;
+  vertical-align: middle;
+}
+
+/* Logo Zoom Off */
+nav ul li.logo img[data-zoomable="false"] {
+  pointer-events: auto;
+}
+nav ul li.logo img {
+  zoom: reset;
+}
+
+/* Global Link Styling */
+a {
+  color: inherit;
+  text-decoration: none;
+}
+a:hover {
+  color: #8f754f;
+}
+a:visited {
   color: inherit;
 }
 
-/* Code Block Container */
+/* Code Block Contener */
 .code-block {
   position: relative;
   margin-top: 1.5em;
@@ -41,10 +58,18 @@ nav ul li a:visited {
   overflow: auto;
 }
 
-/* Code Font */
-pre code {
-  font-family: "Courier New", monospace;
+/* Code Style Override */
+code,
+pre {
+  font-family: "Courier New", Courier, monospace;
   font-size: 1em;
+  background: #F0F0F0;
+}
+
+/* Force Prism Background Override */
+code[class*="language-"],
+pre[class*="language-"] {
+  background: #F0F0F0 !important;
 }
 
 /* Copy Button */
