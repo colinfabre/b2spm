@@ -15,7 +15,7 @@ topo_chablais <- topo_comp(dem_chablais)
 drias_chablais_2050 <- drias_fetcher(topography, year = 2050)
 
 # Runs the model for the Chablais in 2030
-results_chablais <- pipeline(drias_table = drias_chablais_2050, topography = topo_chablais)
+results_chablais <- pipeline(drias_table = drias_chablais_2050, topography = topo_chablais, return_tables = TRUE, precision = 1)
 
 # Displays the epidemic risk map
 plot(results_chablais$rpheno)

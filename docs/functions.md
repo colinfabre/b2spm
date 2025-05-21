@@ -5,6 +5,7 @@ permalink: /functions/
 ---
 
 ```r
+library(b2spm)
 topo_comp(dem)
 ```
 Extracts spruce forest areas and topographic data from the study area.

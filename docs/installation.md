@@ -1,7 +1,7 @@
 ---
 layout: default
 title: Installation & Dependencies
-permalink: /installation/
+permalink: /installation-dependencies/
 ---
 
 # Installation
@@ -56,7 +56,7 @@ The climate parameters required to run B2SPM are:
 - Potential evapotranspiration (kg/m²/s)
 
 <p align="center">
-  <img src="/figures/drias_params.png" width="750" height="435">
+  <img src="/figures/drias_params.png" width="750" height="525">
 </p>
 
 Data downloaded from DRIAS-2020 must be provided as `.txt` files (native format) following this structure:
