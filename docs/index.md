@@ -3,7 +3,6 @@ layout: default
 title: B2SPM
 ---
 
-[![GitHub version](https://img.shields.io/github/tag/colinfabre/b2spm.svg?label=dev)](https://github.com/colinfabre/b2spm/releases)
 [![R-CMD-check](https://github.com/colinfabre/b2spm/actions/workflows/r.yaml/badge.svg)](https://github.com/colinfabre/b2spm/actions/workflows/r.yaml)
 [![License: CC BY-NC-ND 4.0](https://img.shields.io/badge/license-CC%20BY--NC--ND%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc-nd/4.0/)
 ![INPI Soleau](https://img.shields.io/badge/INPI-Soleau%20Envelope%20%7C%202025-blue)
@@ -15,6 +14,6 @@ It enables the analysis of bark beetle epidemiology for the current period (curr
 The model is based on a minimum computational and interpretation grid. The computational grid is constrained by the systematic spacing of DRIAS points (8km), which are pseudo-randomly distributed across France. The interpretation grid is set at 250m to account for the spatialization accuracy limits of the indicators and the intra-valley/forest massif variability, which is difficult to model at a finer scale. Therefore, a probable attack should only be assessed at this spatial scale.
 
 <p align="center">
-  <img src="/figures/roi.png" width="1000" height="580"><br>
+  <img src="/figures/roi.png" width="750" height="435"><br>
   <em style="font-size: 8pt;">Map of Spruce Forests in the French Alpine Arc. BDFORÊTV2, IGN 2025; OSM 2025</em>
 </p>

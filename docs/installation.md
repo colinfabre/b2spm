@@ -33,14 +33,14 @@ B2SPM requires a DEM (Digital Elevation Model) covering at least the entire stud
 The phenological model relies on climate data from the [DRIAS portal](https://www.drias-climat.fr), which provides regionalized climate projections for mainland France. The corrected DRIAS-2020 data are available for several different models, but the most accurate for France is MétéoFrance's global ARPEGE-Climat model, forced by the regional climate model (RCM) and used in the ALADIN63 simulation. The preferred scenario is RCP8.5, as it aligns with the current greenhouse gas emission curve.
 
 <p align="center">
-  <img src="/figures/drias_model.png" width="1000" height="450">
+  <img src="/figures/drias_model.png" width="750" height="337">
 </p>
 
 The user can select the desired study year and extract all DRIAS points contained within their study area, adding a one-row and one-column margin on all sides to ensure proper spatialization of phenological indicators.
 
 <p align="center">
-  <img src="/figures/drias_time.png" width="1000" height="285">
-  <img src="/figures/drias_points.png" width="1000" height="855">
+  <img src="/figures/drias_time.png" width="750" height="214">
+  <img src="/figures/drias_points.png" width="750" height="641">
 </p>
 
 The climate parameters required to run B2SPM are:
@@ -56,7 +56,7 @@ The climate parameters required to run B2SPM are:
 - Potential evapotranspiration (kg/m²/s)
 
 <p align="center">
-  <img src="/figures/drias_params.png" width="1000" height="580">
+  <img src="/figures/drias_params.png" width="750" height="435">
 </p>
 
 Data downloaded from DRIAS-2020 must be provided as `.txt` files (native format) following this structure:
@@ -81,5 +81,5 @@ ID001,908000,2129000,02/01/2030,-1.8,6.2,2.1,0.0001,0.0024,152.5,225.0,1.8,0.000
 ```
 
 <p align="center">
-  <img src="/figures/drias_format.png" width="1000" height="725">
+  <img src="/figures/drias_format.png" width="750" height="544">
 </p>

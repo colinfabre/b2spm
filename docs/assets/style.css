@@ -30,14 +30,6 @@ nav ul li.logo img {
   vertical-align: middle;
 }
 
-/* Logo Zoom Off */
-nav ul li.logo img[data-zoomable="false"] {
-  pointer-events: auto;
-}
-nav ul li.logo img {
-  zoom: reset;
-}
-
 /* Global Link Styling in Body Text */
 main a {
   color: #1A0DAB;

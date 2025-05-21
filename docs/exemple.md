@@ -22,5 +22,5 @@ plot(results_chablais$rpheno)
 ```
 
 <p align="center">
-  <img src="/figures/exemple.png" width="1000" height="725">
+  <img src="/figures/exemple.png" width="750" height="544">
 </p>
