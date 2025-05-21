@@ -1,50 +1,53 @@
 /* Navigation Bar */
-nav {
-  background: #f8f9fa;
-  padding: 1em 2em;
-  border-bottom: 1px solid #ddd;
-}
 nav ul {
-  list-style: none;
-  margin: 0;
-  padding: 0;
   display: flex;
   align-items: center;
-  gap: 1.5em;
+  list-style: none;
+  padding: 0;
+  background-color: #f8f8f8;
+  margin: 0;
 }
-nav ul li a {
-  text-decoration: none;
-  color: #333333;
-  font-weight: bold;
+
+nav ul li {
+  margin: 0 1em;
 }
-nav ul li a:hover {
-  color: #8f754f;
-  text-decoration: none;
-}
-nav ul li a:visited {
-  color: #333333;
-  text-decoration: none;
-}
+
 nav ul li.logo img {
   height: 40px;
-  vertical-align: middle;
+  cursor: pointer;
 }
 
-/* Global Link Styling in Body Text */
-main a {
+/* No Medium Zoom on Logo */
+nav ul li.logo img[data-zoomable="false"] {
+  pointer-events: auto;
+}
+
+/* Link Styles (Body) */
+a {
   color: #1A0DAB;
   text-decoration: none;
 }
-main a:hover {
-  color: #8f754f;
+
+a:hover {
+  color: #8F754F;
   text-decoration: underline;
 }
-main a:visited {
+
+a:visited {
   color: #1A0DAB;
+}
+
+/* Navigation Bar Links */
+nav ul li a {
+  color: #333;
   text-decoration: none;
 }
 
-/* Code Block Contener */
+nav ul li a:hover {
+  color: #8F754F;
+}
+
+/* Code Block Container */
 .code-block {
   position: relative;
   margin-top: 1.5em;
@@ -52,20 +55,8 @@ main a:visited {
   border: 1px solid #d0d7de;
   border-radius: 6px;
   overflow: auto;
-}
-
-/* Code Style */
-code,
-pre {
-  font-family: "Courier New", Courier, monospace;
-  font-size: 0.5em;
-  background: #F0F0F0;
-}
-
-/* Force Prism Background Override */
-code[class*="language-"],
-pre[class*="language-"] {
-  background: #F0F0F0 !important;
+  font-family: "Courier New", monospace;
+  font-size: 1em;
 }
 
 /* Copy Button */
@@ -81,6 +72,7 @@ pre[class*="language-"] {
   cursor: pointer;
   transition: background 0.2s;
 }
+
 .copy-btn:hover {
   background: #d0d7de;
 }
