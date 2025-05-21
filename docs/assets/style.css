@@ -14,14 +14,16 @@ nav ul {
 }
 nav ul li a {
   text-decoration: none;
-  color: #333;
+  color: #333333;
   font-weight: bold;
 }
 nav ul li a:hover {
   color: #8f754f;
+  text-decoration: none;
 }
 nav ul li a:visited {
-  color: #333;
+  color: #333333;
+  text-decoration: none;
 }
 nav ul li.logo img {
   height: 40px;
@@ -36,16 +38,18 @@ nav ul li.logo img {
   zoom: reset;
 }
 
-/* Global Link Styling */
-a {
-  color: inherit;
+/* Global Link Styling in Body Text */
+main a {
+  color: #1A0DAB;
   text-decoration: none;
 }
-a:hover {
+main a:hover {
   color: #8f754f;
+  text-decoration: underline;
 }
-a:visited {
-  color: inherit;
+main a:visited {
+  color: #1A0DAB;
+  text-decoration: none;
 }
 
 /* Code Block Contener */
@@ -58,11 +62,11 @@ a:visited {
   overflow: auto;
 }
 
-/* Code Style Override */
+/* Code Style */
 code,
 pre {
   font-family: "Courier New", Courier, monospace;
-  font-size: 1em;
+  font-size: 0.8em;
   background: #F0F0F0;
 }
 
