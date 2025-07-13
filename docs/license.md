@@ -14,7 +14,7 @@ FABRE, C. (2025). B2SPM: Bark-Beetle Spatialized Phenological Model (Version 1.0
 
 @software{FABRE_B2SPM_Bark-Beetle_Spatialized_2025,
 author = {FABRE, Colin},
-month = may,
+month = july,
 title = {{B2SPM: Bark-Beetle Spatialized Phenological Model}},
 url = {https://github.com/colinfabre/b2spm},
 version = {1.0},

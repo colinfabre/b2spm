@@ -144,7 +144,4 @@ $$pp_{cshd}(doy) = pp(doy) \times cshd(doy)$$
 where:
 - $$pp_{cshd}(doy)$$ effective photoperiod (in hours) for the given doy, modulated by the surrounding topography
 
-As this whole process can be very computationally expensive (around 20 hours for the 808 DRIAS points of the alpine arc for one year), there are 3 precision levels:
-- `precision = 1` means the photoperiod is computed as a constant through a 15-days window.
-- `precision = 2` means the cast shadows are daily computed at 12.00 (minimum shadowing).
-- `precision = 3` means the cast shadows are daily computed throughout the course of the sun (at 06.00, 09.00, 12.00, 15.00 and 18.00); in that case, expect the computation time to be multiplied by 2.5 from `precision = 2`.
+As this whole process can be very computationally expensive, the photoperiod is computed as a constant through the whole month (in fact the path of the sun variates only little during a 30-days window). 

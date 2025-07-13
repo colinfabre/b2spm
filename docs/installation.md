@@ -30,18 +30,7 @@ There are no specific package versions required.
 
 B2SPM requires a DEM (Digital Elevation Model) covering at least the entire study area where the modeling will be conducted. The resolution of this DEM should not exceed 25m (the final analysis grid is 250m, and a resolution that is too fine (e.g., 5m) significantly increases computation times without improving model accuracy).
 
-The phenological model relies on climate data from the [DRIAS portal](https://www.drias-climat.fr), which provides regionalized climate projections for mainland France. The corrected DRIAS-2020 data are available for several different models, but the most accurate for France is MétéoFrance's global ARPEGE-Climat model, forced by the regional climate model (RCM) and used in the ALADIN63 simulation. The preferred scenario is RCP8.5, as it aligns with the current greenhouse gas emission curve.
-
-<p align="center">
-  <img src="/figures/drias_model.png" width="750" height="337">
-</p>
-
-The user can select the desired study year and extract all DRIAS points contained within their study area, adding a one-row and one-column margin on all sides to ensure proper spatialization of phenological indicators.
-
-<p align="center">
-  <img src="/figures/drias_time.png" width="750" height="214">
-  <img src="/figures/drias_points.png" width="750" height="641">
-</p>
+The phenological model relies on ponctual climate data, ie various climate variables measured/well-estimated at a point whose spatial coordinates are precisely known.
 
 The climate parameters required to run B2SPM are:
 
@@ -55,11 +44,20 @@ The climate parameters required to run B2SPM are:
 - Wind speed (m/s)
 - Potential evapotranspiration (kg/m²/s)
 
+Such data can be user-provided (from a local climate station), or sourced from official database. One climate data provider in France is the [DRIAS portal](https://www.drias-climat.fr). It provides regionalized climate projections for mainland France. The corrected DRIAS-2020 data are available for several different models, but the most accurate for France is MétéoFrance's global ARPEGE-Climat model, forced by the regional climate model (RCM) and used in the ALADIN63 simulation. The preferred scenario is RCP8.5, as it aligns with the current greenhouse gas emission curve.
+
 <p align="center">
-  <img src="/figures/drias_params.png" width="750" height="525">
+  <img src="man/figures/drias_model.png" width="200" height="90">
 </p>
 
-Data downloaded from DRIAS-2020 must be provided as `.txt` files (native format) following this structure:
+The user can select the desired study year and extract all DRIAS points contained within their study area, adding a one-row and one-column margin on all sides to ensure proper spatialization of phenological indicators.
+
+<p align="center">
+  <img src="man/figures/drias_time.png" width="200" height="57">
+  <img src="man/figures/drias_points.png" width="200" height="171">
+</p>
+
+User-provided data or one downloaded from the DRIAS portal must be provided as `.txt` files (native format) following this structure:
 
 - Columns:
   - POSITION: DRIAS point identifier

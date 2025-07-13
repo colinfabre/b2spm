@@ -28,7 +28,7 @@ The **B2SPM** package models the development and spread of the bark beetle in sp
 
 It enables the analysis of bark beetle epidemiology for the current period (current year, for monitoring) or the future (to anticipate attack risks and adapt forest management strategies).
 
-The model is based on a minimum computational and interpretation grid. The computational grid is constrained by the systematic spacing of DRIAS points (8 km), which are pseudo-randomly distributed across France. The interpretation grid is set at 250 m to account for the spatialization accuracy limits of the indicators and the intra-valley/forest massif variability, which is difficult to model at a finer scale. Therefore, a probable attack should only be assessed at this spatial scale.
+The model is based on a minimum interpretation grid. This grid is set at 250m to account for the spatialization accuracy limits of the indicators and the intra-valley/forest massif variability, which is difficult to model at a finer scale. Therefore, a probable attack should only be assessed at this spatial scale.
 
 <p align="center">
   <img src="man/figures/roi.png" width="200" height="116"><br>
@@ -61,18 +61,7 @@ There are no specific package versions required.
 
 B2SPM requires a DEM (Digital Elevation Model) covering at least the entire study area where the modeling will be conducted. The resolution of this DEM should not exceed 25m (the final analysis grid is 250m, and a resolution that is too fine (e.g., 5m) significantly increases computation times without improving model accuracy).
 
-The phenological model relies on climate data from the [DRIAS portal](https://www.drias-climat.fr), which provides regionalized climate projections for mainland France. The corrected DRIAS-2020 data are available for several different models, but the most accurate for France is MétéoFrance's global ARPEGE-Climat model, forced by the regional climate model (RCM) and used in the ALADIN63 simulation. The preferred scenario is RCP8.5, as it aligns with the current greenhouse gas emission curve.
-
-<p align="center">
-  <img src="man/figures/drias_model.png" width="200" height="90">
-</p>
-
-The colinfabre can select the desired study year and extract all DRIAS points contained within their study area, adding a one-row and one-column margin on all sides to ensure proper spatialization of phenological indicators.
-
-<p align="center">
-  <img src="man/figures/drias_time.png" width="200" height="57">
-  <img src="man/figures/drias_points.png" width="200" height="171">
-</p>
+The phenological model relies on ponctual climate data, ie various climate variables measured/well-estimated at a point whose spatial coordinates are precisely known.
 
 The climate parameters required to run B2SPM are:
 
@@ -86,11 +75,20 @@ The climate parameters required to run B2SPM are:
 - Wind speed (m/s)
 - Potential evapotranspiration (kg/m²/s)
 
+Such data can be user-provided (from a local climate station), or sourced from official database. One climate data provider in France is the [DRIAS portal](https://www.drias-climat.fr). It provides regionalized climate projections for mainland France. The corrected DRIAS-2020 data are available for several different models, but the most accurate for France is MétéoFrance's global ARPEGE-Climat model, forced by the regional climate model (RCM) and used in the ALADIN63 simulation. The preferred scenario is RCP8.5, as it aligns with the current greenhouse gas emission curve.
+
 <p align="center">
-  <img src="man/figures/drias_params.png" width="200" height="116">
+  <img src="man/figures/drias_model.png" width="200" height="90">
 </p>
 
-Data downloaded from DRIAS-2020 must be provided as `.txt` files (native format) following this structure:
+The user can select the desired study year and extract all DRIAS points contained within their study area, adding a one-row and one-column margin on all sides to ensure proper spatialization of phenological indicators.
+
+<p align="center">
+  <img src="man/figures/drias_time.png" width="200" height="57">
+  <img src="man/figures/drias_points.png" width="200" height="171">
+</p>
+
+User-provided data or one downloaded from the DRIAS portal must be provided as `.txt` files (native format) following this structure:
 
 - Columns:
   - POSITION: DRIAS point identifier
@@ -266,10 +264,7 @@ $$pp_{cshd}(doy) = pp(doy) \times cshd(doy)$$
 where:
 - $$pp_{cshd}(doy)$$ effective photoperiod (in hours) for the given doy, modulated by the surrounding topography
 
-As this whole process can be very computationally expensive (around 20 hours for the 808 DRIAS points of the alpine arc for one year), there are 3 precision levels:
-- `precision = 1` means the photoperiod is computed as a constant through a 15-days window.
-- `precision = 2` means the cast shadows are daily computed at 12.00 (minimum shadowing).
-- `precision = 3` means the cast shadows are daily computed throughout the course of the sun (at 06.00, 09.00, 12.00, 15.00 and 18.00); in that case, expect the computation time to be multiplied by 2.5 from `precision = 2`.
+As this whole process can be very computationally expensive, the photoperiod is computed as a constant through the whole month (in fact the path of the sun variates only little during a 30-days window). 
 
 ## Usage Example
 
