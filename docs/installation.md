@@ -47,14 +47,14 @@ The climate parameters required to run B2SPM are:
 Such data can be user-provided (from a local climate station), or sourced from official database. One climate data provider in France is the [DRIAS portal](https://www.drias-climat.fr). It provides regionalized climate projections for mainland France. The corrected DRIAS-2020 data are available for several different models, but the most accurate for France is MétéoFrance's global ARPEGE-Climat model, forced by the regional climate model (RCM) and used in the ALADIN63 simulation. The preferred scenario is RCP8.5, as it aligns with the current greenhouse gas emission curve.
 
 <p align="center">
-  <img src="man/figures/drias_model.png" width="200" height="90">
+  <img src="/figures/drias_model.png" width="200" height="90">
 </p>
 
 The user can select the desired study year and extract all DRIAS points contained within their study area, adding a one-row and one-column margin on all sides to ensure proper spatialization of phenological indicators.
 
 <p align="center">
-  <img src="man/figures/drias_time.png" width="200" height="57">
-  <img src="man/figures/drias_points.png" width="200" height="171">
+  <img src="/figures/drias_time.png" width="200" height="57">
+  <img src="/figures/drias_points.png" width="200" height="171">
 </p>
 
 User-provided data or one downloaded from the DRIAS portal must be provided as `.txt` files (native format) following this structure:
