@@ -750,7 +750,7 @@ pipeline <- function(topography, drias_table, return_tables = FALSE) {
     Sys.sleep(2)
     cat("Pipeline initialisation...\n")
     cat("\n")
-    start_time <- Sys.time()
+    start_time <- proc.time()
     Sys.sleep(2)
 
     cat("Checking available RAM...\n")
@@ -845,10 +845,10 @@ pipeline <- function(topography, drias_table, return_tables = FALSE) {
         names(results) <- c("awakening_table", "swarming_table", "maturing_table", "hsi_table", "spat_ind", "rpheno")
     }
 
-    end_time <- Sys.time()
-    cat("Pipeline -- OK")
-    process_time <- round(end_time - start_time, 0) - (5 * 2 + 5) ### number of Sys.sleep(2)
-    cat(paste0("Processing time: ", process_time, "mins\n"))
+    end_time <- proc.time()
+    cat("Pipeline -- OK\n")
+    process_time <- round(end_time - start_time, 0)
+    cat(paste0("Processing time: ", process_time["elapsed"], "\n"))
 
     cat("\n")
     cat("+--------------------------------------------------------------------------------------------------+\n")
