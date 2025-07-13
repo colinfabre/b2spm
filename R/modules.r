@@ -848,7 +848,7 @@ pipeline <- function(topography, drias_table, return_tables = FALSE) {
     end_time <- proc.time()
     cat("Pipeline -- OK\n")
     process_time <- round(end_time - start_time, 0)
-    cat(paste0("Processing time: ", process_time["elapsed"], "\n"))
+    cat(paste0("Processing time: ", process_time["elapsed"], "seconds.\n"))
 
     cat("\n")
     cat("+--------------------------------------------------------------------------------------------------+\n")
