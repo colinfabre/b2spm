@@ -256,7 +256,9 @@ ppc <- function(drias_table, topography) {
     cat("Computing the cast-shadowing-moderated photoperiod using FOURIER's Series...\n")
     cat("<!> Warning - This step can be quite long, depending on your computing resources and the size of your study area.\n")
 
-    astro_table <- expand.grid(month = 1:12, hour = 12)
+    hour <- c(12)
+    months <- 1:12
+    astro_table <- expand.grid(month = months, hour = hour)
     astro_table$doy <- floor(seq(from = 1, to = 365, length.out = 12 * 24))[astro_table$month]
     astro_table$gamma <- 2 * pi / 365 * (astro_table$doy - 1 + astro_table$hour / 24)
     astro_table$delta <- with(astro_table, 0.006918 - 0.399912 * cos(gamma) + 0.070257 * sin(gamma) - 0.006758 * cos(2 * gamma) + 0.000907 * sin(2 * gamma) - 0.002697 * cos(3 * gamma) + 0.00148 * sin(3 * gamma))
