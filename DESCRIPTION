@@ -1,6 +1,6 @@
 Package: b2spm
 Title: Bark-Beetle Spatialized Phenological Model
-Version: 1.0
+Version: 1.2
 Date: 2025-07-23
 Authors@R: c(person("Colin", "FABRE", email = "contact@colinfabre.fr", role = c("aut", "cre")))
 Maintainer@R: Colin FABRE
