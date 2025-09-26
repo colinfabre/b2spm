@@ -1,7 +1,0 @@
-title: "B2SPM"
-markdown: kramdown
-theme: minima
-highlighter: rouge
-markdown: kramdown
-kramdown:
-  input: GFM
