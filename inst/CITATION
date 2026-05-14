@@ -1,0 +1,10 @@
+cff-version: 1.2.0
+message: "If you use this package, please cite it as below."
+authors:
+- family-names: "FABRE"
+  given-names: "Colin"
+  orcid: "https://orcid.org/0000-0000-0000-0000"
+title: "B2SPM: Bark-Beetle Spatialized Phenological Model"
+version: 1.0
+date-released: 2025-03-27
+url: "https://github.com/colinfabre/b2spm"
