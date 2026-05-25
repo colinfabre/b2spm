@@ -1,7 +1,7 @@
 Package: b2spm
-Title: Bark-Beetle Spatialized Phenological Model
-Version: 1.2
-Date: 2025-07-23
+Title: Bark Beetle Spatialized Phenological Model
+Version: 1.0
+Date: 2026-06-01
 Authors@R: c(person("Colin", "FABRE", email = "contact@colinfabre.fr", role = c("aut", "cre")))
 Maintainer@R: Colin FABRE
 Description: Topoclimatological model of bark beetle development and spread in the spruce forests of the French Alpine arc.
@@ -10,12 +10,14 @@ Encoding: UTF-8
 Depends:
     R (>= 4.0.0)
 Imports:
-    utils,
-    stats,
     terra,
+    ncdf4,
     sf,
-    gstat,
-    ps
+    stats,
+    utils,
+    tools,
+    httr,
+    parallel
 Suggests:
     knitr,
     rmarkdown
