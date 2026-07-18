@@ -6,6 +6,6 @@
   <img src="man/figures/b2spm.png" width="178" height="200">
 </p>
 
-# B2SPM: Bark-Beetle Spatialized Phenological Model
+# B2SPM: Bark Beetle Spatialized Phenological Model
 
 📚 Read the full documentation on the [package website](https://b2spm.colinfabre.fr).
