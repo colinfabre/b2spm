@@ -4,7 +4,7 @@ rh_calc <- function(spec_hum, t_mean) {
     rh_day <- rh * 0.8
     rh_night <- rh * 1.2
 
-    return(rh, rh_day, rh_night)
+    return(list(rh = rh, rh_day = rh_day, rh_night = rh_night))
 }
 
 
@@ -13,7 +13,7 @@ wind_calc <- function(wind) {
     wind_day <- wind * 1.2
     wind_night <- wind * 0.8
 
-    return(wind_day, wind_night)
+    return(list(wind_day = wind_day, wind_night = wind_night))
 }
 
 
@@ -21,5 +21,5 @@ wind_calc <- function(wind) {
 vis_rad_calc <- function(vis_rad) {
     vis_rad_max <- vis_rad * 1.5
 
-    return(vis_rad_max)
+    return(list(vis_rad_max = vis_rad_max))
 }
