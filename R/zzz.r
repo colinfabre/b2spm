@@ -11,7 +11,7 @@
       packageStartupMessage("|-------------------------------------- Dependencies -- ready -------------------------------------|")
     } else {
     packageStartupMessage("|---------------------------------- Dependencies -- /!\ MISSING /!\ ---------------------------------|")
-    packageStartupMessage(paste0("|----- Please run first: install.packages(c(\"", paste(missing_pkgs, collapse = "\", \""), "\")) -----|"))
+    packageStartupMessage(paste0("|----- Please run first: install.packages(c(\"", paste(required_pkgs, collapse = "\", \""), "\")) -----|"))
     }
 
     packageStartupMessage("+--------------------------------------------------------------------------------------------------+")
