@@ -1,7 +1,3 @@
-library(terra)
-
-
-
 rh_calc <- function(spec_hum, t_mean) {
     rh <- (spec_hum / (0.622 + 0.378 * spec_hum)) * exp(17.27 * t_mean / (t_mean + 237.3))
 
