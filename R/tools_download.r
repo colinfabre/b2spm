@@ -57,7 +57,7 @@ process_nc <- function(url, roi, output) {
     raster <- terra::crop(grid, roi, snap = "out")
 
     interest_vars_raw <- c("prtotAdjust", "tasAdjust", "tasmaxAdjust", "tasminAdjust", "hussAdjust", "sfcWindAdjust", "rldsAdjust", "rsdsAdjust", "evspsblpotAdjust")
-    interest_vars_mod <- c("prec", "t_mean", "t_max", "t_min", "spechum", "wind", "ir_rad", "vis_rad", "etp")
+    interest_vars_mod <- c("prec", "t_mean", "t_max", "t_min", "spec_hum", "wind", "ir_rad", "vis_rad", "etp")
     var_mapping <- stats::setNames(interest_vars_mod, interest_vars_raw)
     var_names <- names(nc_data$var)
     for (var in var_names) {
